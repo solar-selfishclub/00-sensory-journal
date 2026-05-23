@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#FAF8F2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><defs><radialGradient id='a' cx='40%25' cy='35%25'><stop offset='0%25' stop-color='rgb(245,212,181)' stop-opacity='0.9'/><stop offset='55%25' stop-color='rgb(201,149,106)' stop-opacity='0.45'/><stop offset='100%25' stop-color='rgb(201,149,106)' stop-opacity='0'/></radialGradient><radialGradient id='b' cx='40%25' cy='35%25'><stop offset='0%25' stop-color='rgb(201,227,206)' stop-opacity='0.9'/><stop offset='55%25' stop-color='rgb(130,176,140)' stop-opacity='0.45'/><stop offset='100%25' stop-color='rgb(130,176,140)' stop-opacity='0'/></radialGradient></defs><rect width='192' height='192' rx='42' fill='%23FAF8F2'/><circle cx='80' cy='90' r='62' fill='url(%23a)'/><circle cx='118' cy='110' r='62' fill='url(%23b)'/></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><defs><radialGradient id='a' cx='40%25' cy='35%25'><stop offset='0%25' stop-color='rgb(245,212,181)' stop-opacity='0.9'/><stop offset='55%25' stop-color='rgb(201,149,106)' stop-opacity='0.45'/><stop offset='100%25' stop-color='rgb(201,149,106)' stop-opacity='0'/></radialGradient><radialGradient id='b' cx='40%25' cy='35%25'><stop offset='0%25' stop-color='rgb(201,227,206)' stop-opacity='0.9'/><stop offset='55%25' stop-color='rgb(130,176,140)' stop-opacity='0.45'/><stop offset='100%25' stop-color='rgb(130,176,140)' stop-opacity='0'/></radialGradient></defs><rect width='192' height='192' rx='42' fill='%23FAF8F2'/><circle cx='80' cy='90' r='62' fill='url(%23a)'/><circle cx='118' cy='110' r='62' fill='url(%23b)'/></svg>" />
+  <link rel="manifest" href='data:application/manifest+json,%7B%22name%22%3A%22%EA%B0%90%EA%B0%81%20%EC%9D%BC%EA%B8%B0%22%2C%22short_name%22%3A%22%EA%B0%90%EA%B0%81%20%EC%9D%BC%EA%B8%B0%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22theme_color%22%3A%22%23FAF8F2%22%2C%22background_color%22%3A%22%23FAF8F2%22%7D' />
+  <title>감각 일기</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+
+  <style>
+    /* ---------- Base ---------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #FAF8F2;
+    }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color: #5C4631;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      /* paper grain texture — very faint crosshatch, just enough to be felt */
+      background-color: #FAF8F2;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          rgba(120, 95, 65, 0.012) 0 1px,
+          transparent 1px 6px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          rgba(120, 95, 65, 0.010) 0 1px,
+          transparent 1px 8px
+        );
+    }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* ---------- View toggle ---------- */
+    .view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      height: 100%;
+    }
+    .view.active {
+      display: flex;
+    }
+
+    /* ---------- Soft divider (faded ends) ---------- */
+    .divider {
+      width: 70%;
+      height: 1px;
+      background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(92, 70, 49, 0.25) 35%,
+        rgba(92, 70, 49, 0.25) 65%,
+        transparent 100%
+      );
+      margin: 0 auto;
+    }
+
+    /* ===================================================== */
+    /* Screen 1: Home (sense selection)                       */
+    /* ===================================================== */
+
+    #view-home {
+      padding: 0;
+    }
+
+    .home-header {
+      padding: 32px 28px 6px;
+      text-align: center;
+      position: relative;
+    }
+    .link-journal {
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #9C8770;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      padding: 6px 4px;
+      transition: color 0.2s ease;
+    }
+    .link-journal:active { color: #5C4631; }
+    .home-date {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 400;
+      font-size: 13px;
+      color: #9C8770;
+      letter-spacing: 0.6px;
+      margin-bottom: 16px;
+    }
+    .home-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 21px;
+      color: #5C4631;
+      line-height: 1.55;
+      margin: 0;
+      letter-spacing: 0.3px;
+    }
+
+    .home-stage {
+      flex: 1;
+      position: relative;
+      min-height: 480px;
+      margin: 4px 0 0;
+    }
+
+    /* Outer container — only handles position, size, animation, tap.
+       Each sense gets its own drift keyframe so the five circles don't
+       breathe in unison; they each wander on their own little path. */
+    .sense-circle {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      cursor: pointer;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      transition: transform 0.25s ease;
+    }
+    .sense-circle:active {
+      transform: scale(0.96);
+    }
+
+    /* The painted blob — perfectly round, just diluted pigment on paper.
+       No outer halo, no ring on top: selection is expressed purely as
+       "faint → vivid" by lifting opacity + saturation together. */
+    .sense-blob {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.45;
+      filter: saturate(0.8);
+      mix-blend-mode: multiply;
+      transition: opacity 0.55s ease, filter 0.55s ease;
+    }
+    .sense-circle.selected .sense-blob {
+      opacity: 1;
+      filter: saturate(1.1);
+    }
+
+    /* Five independent drift paths — different shapes, different speeds.
+       Together they read as colors floating freely on wet paper. */
+    @keyframes drift-1 {
+      0%, 100% { translate: 0 0; }
+      25%      { translate:  5px -3px; }
+      50%      { translate:  2px -7px; }
+      75%      { translate: -3px -4px; }
+    }
+    @keyframes drift-2 {
+      0%, 100% { translate: 0 0; }
+      30%      { translate: -5px -2px; }
+      60%      { translate: -3px -6px; }
+      80%      { translate:  2px -3px; }
+    }
+    @keyframes drift-3 {
+      0%, 100% { translate: 0 0; }
+      20%      { translate:  3px  2px; }
+      45%      { translate:  6px -2px; }
+      70%      { translate:  4px -6px; }
+      90%      { translate: -1px -3px; }
+    }
+    @keyframes drift-4 {
+      0%, 100% { translate: 0 0; }
+      33%      { translate: -4px  3px; }
+      66%      { translate: -6px -2px; }
+      85%      { translate: -2px -5px; }
+    }
+    @keyframes drift-5 {
+      0%, 100% { translate: 0 0; }
+      25%      { translate:  2px  4px; }
+      50%      { translate:  5px  1px; }
+      75%      { translate:  3px -4px; }
+    }
+
+    /* ---- Per-sense color tokens & position ----
+       --core / --mid / --edge are RGB triples so every gradient stop can
+       carry an alpha — that's what makes the whole shape look diluted
+       instead of just the rim. */
+
+    /* Positions are deliberately uneven and slightly overlapping —
+       the watercolor blobs are set to multiply-blend, so where two circles
+       brush against each other their colors mingle into a third hue,
+       like real wet pigment on paper. */
+    .sense-sight {
+      --core: 245, 212, 181;
+      --mid:  232, 182, 140;
+      --edge: 201, 149, 106;
+      top: 8%;  left: 22%;
+      animation-name: drift-1; animation-duration: 9s;
+    }
+    .sense-hearing {
+      --core: 201, 227, 206;
+      --mid:  168, 207, 176;
+      --edge: 130, 176, 140;
+      top: 18%; right: 10%;
+      animation-name: drift-2; animation-duration: 11s;
+    }
+    .sense-smell {
+      --core: 219, 202, 227;
+      --mid:  197, 176, 208;
+      --edge: 160, 136, 176;
+      top: 32%; left: 12%;
+      animation-name: drift-3; animation-duration: 8.5s;
+    }
+    .sense-taste {
+      --core: 242, 182, 175;
+      --mid:  232, 152, 144;
+      --edge: 201, 112, 106;
+      top: 46%; right: 6%;
+      animation-name: drift-4; animation-duration: 10s;
+    }
+    .sense-touch {
+      --core: 224, 204, 168;
+      --mid:  205, 179, 135;
+      --edge: 168, 142, 102;
+      top: 56%; left: 18%;
+      animation-name: drift-5; animation-duration: 12s;
+    }
+
+    /* Diluted watercolor: every stop carries low alpha so cream paper shows
+       through, last stop hits 0 alpha so the edge melts into paper.
+       No box-shadow halo — anything beyond this gradient was reading as a
+       second faint ring around the circle. */
+    .sense-blob {
+      background: radial-gradient(circle at 38% 32%,
+        rgba(var(--core), 0.82) 0%,
+        rgba(var(--mid),  0.66) 32%,
+        rgba(var(--edge), 0.42) 60%,
+        rgba(var(--edge), 0.18) 84%,
+        rgba(var(--edge), 0)    100%);
+    }
+
+    /* Label — drawn outside the filtered subtree so it stays crisp */
+    .sense-label {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 16px;
+      pointer-events: none;
+      letter-spacing: 1.4px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+      z-index: 2;
+    }
+    .sense-sight   .sense-label { color: #6B3A1E; }
+    .sense-hearing .sense-label { color: #2E5C3A; }
+    .sense-smell   .sense-label { color: #4A2E5C; }
+    .sense-taste   .sense-label { color: #6B2E2A; }
+    .sense-touch   .sense-label { color: #5C4218; }
+
+    /* Home footer */
+    .home-footer {
+      padding: 8px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .home-counter {
+      font-size: 13px;
+      color: #9C8770;
+      letter-spacing: 0.4px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+    }
+    .btn-next {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 16px;
+      padding: 12px 40px;
+      color: #5C4631;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.2);
+      border-radius: 999px;
+      box-shadow:
+        0 1px 2px rgba(92, 70, 49, 0.08),
+        0 4px 14px rgba(92, 70, 49, 0.06);
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.2s ease;
+      letter-spacing: 1px;
+    }
+    .btn-next.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .btn-next:active {
+      transform: scale(0.97);
+    }
+
+    /* ===================================================== */
+    /* Screen 2: Input (photo + one line)                     */
+    /* ===================================================== */
+
+    .input-header {
+      padding: 28px 28px 4px;
+      text-align: center;
+    }
+    .picked-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 14px;
+      margin-bottom: 8px;
+    }
+    .picked-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.25);
+    }
+    .picked-dot.sight   { background: radial-gradient(circle at 35% 35%, #F0CCAB, #E8B68C); }
+    .picked-dot.hearing { background: radial-gradient(circle at 35% 35%, #BFDBC6, #A8CFB0); }
+    .picked-dot.smell   { background: radial-gradient(circle at 35% 35%, #D2C2DC, #C5B0D0); }
+    .picked-dot.taste   { background: radial-gradient(circle at 35% 35%, #F1AEA7, #E89890); }
+    .picked-dot.touch   { background: radial-gradient(circle at 35% 35%, #D9C49F, #CDB387); }
+
+    .picked-names {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #9C8770;
+      letter-spacing: 1.2px;
+    }
+
+    .input-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 19px;
+      color: #5C4631;
+      text-align: center;
+      margin: 18px 0 22px;
+      letter-spacing: 0.5px;
+    }
+
+    .input-body {
+      flex: 1;
+      padding: 0 28px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .photo-frame {
+      position: relative;
+      width: 100%;
+      max-width: 230px;
+      aspect-ratio: 1 / 1;
+      margin: 0 auto 16px;
+      border-radius: 6px;
+      border: 1.4px dashed rgba(92, 70, 49, 0.28);
+      background: rgba(251, 247, 238, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .photo-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .photo-frame.has-photo .photo-preview { display: block; }
+    .photo-frame.has-photo .photo-empty   { display: none; }
+    .photo-frame.has-photo .photo-remove  { display: flex; }
+
+    .photo-empty {
+      color: #B5A38B;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      text-align: center;
+      padding: 16px 20px;
+      letter-spacing: 0.5px;
+      line-height: 1.6;
+    }
+    .photo-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(250, 248, 242, 0.92);
+      border: 1px solid rgba(92, 70, 49, 0.18);
+      color: #5C4631;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .photo-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 26px;
+    }
+    .photo-btn {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      padding: 9px 26px;
+      color: #5C4631;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.2);
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-block;
+      letter-spacing: 1.2px;
+      user-select: none;
+      transition: transform 0.2s ease;
+      box-shadow:
+        0 1px 2px rgba(92, 70, 49, 0.06),
+        0 3px 10px rgba(92, 70, 49, 0.04);
+    }
+    .photo-btn:active { transform: scale(0.96); }
+
+    .text-line {
+      width: 100%;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 17px;
+      color: #5C4631;
+      background: transparent;
+      border: none;
+      border-bottom: 1.4px dashed rgba(92, 70, 49, 0.28);
+      padding: 12px 4px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.3px;
+      margin: 4px 0 12px;
+    }
+    .text-line::placeholder {
+      color: #BFAE96;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .input-footer {
+      padding: 12px 28px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .btn-back {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 15px;
+      color: #9C8770;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 8px 4px;
+      letter-spacing: 1.5px;
+    }
+    .btn-back:active { color: #5C4631; }
+
+    .btn-save {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 16px;
+      padding: 12px 32px;
+      color: #5C4631;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.2);
+      border-radius: 999px;
+      box-shadow:
+        0 1px 2px rgba(92, 70, 49, 0.08),
+        0 4px 14px rgba(92, 70, 49, 0.06);
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.2s ease;
+      letter-spacing: 1.2px;
+    }
+    .btn-save.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .btn-save:active { transform: scale(0.97); }
+
+    /* ===================================================== */
+    /* Screen 3: Done                                         */
+    /* ===================================================== */
+
+    #view-done {
+      padding: 0;
+    }
+
+    .done-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px 20px;
+    }
+
+    .done-cluster {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin-bottom: 36px;
+    }
+
+    .blend-circle {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      mix-blend-mode: multiply;
+      display: none;
+      background: radial-gradient(circle at 38% 32%,
+        rgba(var(--c1), 0.82) 0%,
+        rgba(var(--c2), 0.66) 32%,
+        rgba(var(--e),  0.42) 60%,
+        rgba(var(--e),  0.18) 84%,
+        rgba(var(--e),  0)    100%);
+    }
+    .blend-circle.show { display: block; }
+
+    .blend-circle[data-sense="sight"]   {
+      --c1: 245, 212, 181; --c2: 232, 182, 140; --e: 201, 149, 106;
+      top: 30px;  left: 30px;
+    }
+    .blend-circle[data-sense="hearing"] {
+      --c1: 201, 227, 206; --c2: 168, 207, 176; --e: 130, 176, 140;
+      top: 30px;  left: 80px;
+    }
+    .blend-circle[data-sense="smell"]   {
+      --c1: 219, 202, 227; --c2: 197, 176, 208; --e: 160, 136, 176;
+      top: 60px;  left: 20px;
+    }
+    .blend-circle[data-sense="taste"]   {
+      --c1: 242, 182, 175; --c2: 232, 152, 144; --e: 201, 112, 106;
+      top: 60px;  left: 90px;
+    }
+    .blend-circle[data-sense="touch"]   {
+      --c1: 224, 204, 168; --c2: 205, 179, 135; --e: 168, 142, 102;
+      top: 90px;  left: 55px;
+    }
+
+    .done-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 22px;
+      color: #5C4631;
+      margin: 0 0 8px;
+      letter-spacing: 0.4px;
+    }
+    .done-sub {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #9C8770;
+      margin: 0;
+      letter-spacing: 0.8px;
+    }
+
+    .done-footer {
+      padding: 16px 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .btn-secondary {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 15px;
+      color: #9C8770;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 10px 8px;
+      letter-spacing: 1.4px;
+    }
+    .btn-secondary:active { color: #5C4631; }
+
+    .btn-primary {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 16px;
+      padding: 12px 28px;
+      color: #5C4631;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.2);
+      border-radius: 999px;
+      box-shadow:
+        0 1px 2px rgba(92, 70, 49, 0.08),
+        0 4px 14px rgba(92, 70, 49, 0.06);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      letter-spacing: 1.2px;
+    }
+    .btn-primary:active { transform: scale(0.97); }
+
+    /* ===================================================== */
+    /* Screen 4: Journal                                      */
+    /* ===================================================== */
+
+    .journal-header {
+      padding: 30px 28px 8px;
+      text-align: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .journal-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 20px;
+      color: #5C4631;
+      margin: 0 0 14px;
+      letter-spacing: 0.5px;
+    }
+    .journal-tabs {
+      display: inline-flex;
+      gap: 18px;
+      padding: 4px 0 10px;
+    }
+    .journal-tabs .tab {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #9C8770;
+      background: transparent;
+      border: none;
+      padding: 4px 6px;
+      cursor: pointer;
+      letter-spacing: 1.4px;
+      position: relative;
+    }
+    .journal-tabs .tab.active {
+      color: #5C4631;
+    }
+    .journal-tabs .tab.active::after {
+      content: '';
+      position: absolute;
+      left: 10%; right: 10%;
+      bottom: -4px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(92, 70, 49, 0.4), transparent);
+    }
+    .journal-tabs .tab.disabled {
+      color: #C9BDAB;
+      cursor: not-allowed;
+    }
+
+    .journal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 22px 16px;
+    }
+
+    .entry-empty {
+      text-align: center;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      color: #9C8770;
+      font-size: 14px;
+      margin-top: 64px;
+      line-height: 1.8;
+      letter-spacing: 0.5px;
+    }
+
+    .entry-card {
+      position: relative;
+      padding: 22px 6px 26px;
+    }
+    .entry-card::after {
+      content: '';
+      position: absolute;
+      left: 12%; right: 12%;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(to right,
+        transparent 0%,
+        rgba(92, 70, 49, 0.2) 40%,
+        rgba(92, 70, 49, 0.2) 60%,
+        transparent 100%);
+    }
+    .entry-card:last-child::after { display: none; }
+
+    .entry-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .entry-time {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #9C8770;
+      letter-spacing: 0.8px;
+    }
+    .entry-dots {
+      display: inline-flex;
+      gap: 5px;
+    }
+    .entry-dots .picked-dot {
+      width: 9px;
+      height: 9px;
+    }
+
+    .entry-photo {
+      width: 100%;
+      max-height: 340px;
+      object-fit: cover;
+      border-radius: 4px;
+      display: block;
+      margin-bottom: 14px;
+    }
+
+    .entry-text {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 17px;
+      color: #5C4631;
+      line-height: 1.6;
+      margin: 0;
+      letter-spacing: 0.3px;
+    }
+
+    .entry-delete {
+      display: block;
+      margin-left: auto;
+      margin-top: 12px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #B5A38B;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 2px;
+      letter-spacing: 1.2px;
+      transition: color 0.2s ease;
+    }
+    .entry-delete:active,
+    .entry-delete:hover { color: #6B5340; }
+
+    /* ----- Calendar tab ----- */
+    /* Calendar mode pulls journal-body padding in so each cell can breathe. */
+    .journal-body.mode-calendar {
+      padding: 4px 0 16px;
+    }
+
+    .calendar-view {
+      padding: 6px 0 12px;
+    }
+
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 10px 14px;
+    }
+    .cal-month-label {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 15px;
+      color: #5C4631;
+      letter-spacing: 1px;
+    }
+    .cal-arrow {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      background: transparent;
+      border: none;
+      color: #9C8770;
+      font-size: 18px;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      border-radius: 50%;
+      padding: 0;
+      line-height: 1;
+    }
+    .cal-arrow:active { background: rgba(92, 70, 49, 0.06); }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 11px;
+      color: #B5A38B;
+      letter-spacing: 0.6px;
+      padding: 0 4px 6px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      padding: 0 4px;
+    }
+
+    /* Cell = simple block: number on top, square thumb below.
+       Block layout (not flex) so the empty thumb's padding-bottom:100%
+       reliably stretches to a square in every browser. */
+    .cal-cell {
+      display: block;
+      width: 100%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      overflow: hidden;
+      padding: 0;
+      text-align: center;
+      outline: 1.5px solid transparent;
+      outline-offset: -2px;
+      transition: outline-color 0.2s ease, background 0.15s ease;
+    }
+    .cal-cell:focus { outline-color: transparent; }
+    .cal-cell.outside { cursor: default; }
+
+    .cal-num {
+      display: block;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #5C4631;
+      padding: 5px 0 4px;
+      line-height: 1;
+      letter-spacing: 0.2px;
+    }
+    .cal-cell.outside .cal-num { color: #D5C8B5; }
+    .cal-cell.today .cal-num { font-weight: 600; }
+
+    /* Square thumb via padding-bottom trick — works for empty thumbs too
+       so every cell (including blank days) is the same size. */
+    .cal-thumb {
+      display: block;
+      width: 100%;
+      height: 0;
+      padding-bottom: 100%;
+      position: relative;
+      overflow: hidden;
+      border-radius: 3px;
+    }
+    .cal-thumb img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cal-cell:not(.outside):active { background: rgba(92, 70, 49, 0.05); }
+    .cal-cell.selected:not(.outside) {
+      outline-color: rgba(92, 70, 49, 0.45);
+    }
+
+    /* Watercolor blob backgrounds for entries without a photo */
+    .cal-thumb.blob-sight {
+      background: radial-gradient(circle at 38% 32%,
+        rgba(245, 212, 181, 0.72) 0%,
+        rgba(232, 182, 140, 0.56) 30%,
+        rgba(201, 149, 106, 0.32) 65%,
+        rgba(201, 149, 106, 0.12) 88%,
+        rgba(201, 149, 106, 0)    100%);
+    }
+    .cal-thumb.blob-hearing {
+      background: radial-gradient(circle at 38% 32%,
+        rgba(201, 227, 206, 0.72) 0%,
+        rgba(168, 207, 176, 0.56) 30%,
+        rgba(130, 176, 140, 0.32) 65%,
+        rgba(130, 176, 140, 0.12) 88%,
+        rgba(130, 176, 140, 0)    100%);
+    }
+    .cal-thumb.blob-smell {
+      background: radial-gradient(circle at 38% 32%,
+        rgba(219, 202, 227, 0.72) 0%,
+        rgba(197, 176, 208, 0.56) 30%,
+        rgba(160, 136, 176, 0.32) 65%,
+        rgba(160, 136, 176, 0.12) 88%,
+        rgba(160, 136, 176, 0)    100%);
+    }
+    .cal-thumb.blob-taste {
+      background: radial-gradient(circle at 38% 32%,
+        rgba(242, 182, 175, 0.72) 0%,
+        rgba(232, 152, 144, 0.56) 30%,
+        rgba(201, 112, 106, 0.32) 65%,
+        rgba(201, 112, 106, 0.12) 88%,
+        rgba(201, 112, 106, 0)    100%);
+    }
+    .cal-thumb.blob-touch {
+      background: radial-gradient(circle at 38% 32%,
+        rgba(224, 204, 168, 0.72) 0%,
+        rgba(205, 179, 135, 0.56) 30%,
+        rgba(168, 142, 102, 0.32) 65%,
+        rgba(168, 142, 102, 0.12) 88%,
+        rgba(168, 142, 102, 0)    100%);
+    }
+
+    .cal-day-entries {
+      margin-top: 18px;
+    }
+    .cal-day-header {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #9C8770;
+      letter-spacing: 1px;
+      text-align: center;
+      padding: 8px 0 4px;
+      position: relative;
+    }
+    .cal-day-header::after {
+      content: '';
+      display: block;
+      width: 40%;
+      height: 1px;
+      margin: 8px auto 4px;
+      background: linear-gradient(to right, transparent, rgba(92, 70, 49, 0.2), transparent);
+    }
+    .cal-no-entries {
+      text-align: center;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #B5A38B;
+      padding: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .bottom-nav {
+      display: flex;
+      border-top: 1px solid rgba(92, 70, 49, 0.12);
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      background: rgba(250, 248, 242, 0.85);
+    }
+    .nav-btn {
+      flex: 1;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #B5A38B;
+      background: transparent;
+      border: none;
+      padding: 16px 0;
+      cursor: pointer;
+      letter-spacing: 2px;
+    }
+    .nav-btn.active {
+      color: #5C4631;
+    }
+    .nav-btn:active {
+      background: rgba(92, 70, 49, 0.04);
+    }
+
+    /* ===================================================== */
+    /* Settings modal                                         */
+    /* ===================================================== */
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(250, 248, 242, 0.86);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+      backdrop-filter: blur(2px);
+    }
+    .settings-overlay[hidden] { display: none; }
+
+    .settings-modal {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.18);
+      border-radius: 10px;
+      padding: 26px 24px 22px;
+      box-shadow:
+        0 2px 6px rgba(92, 70, 49, 0.08),
+        0 10px 30px rgba(92, 70, 49, 0.10);
+    }
+    .settings-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 17px;
+      color: #5C4631;
+      margin: 0 0 14px;
+      letter-spacing: 0.6px;
+    }
+    .settings-label {
+      display: block;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #9C8770;
+      letter-spacing: 0.8px;
+      margin: 4px 0 6px;
+    }
+    .settings-input {
+      width: 100%;
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 14px;
+      color: #5C4631;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(92, 70, 49, 0.22);
+      border-radius: 6px;
+      padding: 10px 12px;
+      outline: none;
+      letter-spacing: 0.2px;
+    }
+    .settings-input:focus {
+      border-color: rgba(92, 70, 49, 0.45);
+    }
+    .settings-link {
+      display: inline-block;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #9C8770;
+      text-decoration: none;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+    .settings-link:active { color: #5C4631; }
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .settings-btn-ghost,
+    .settings-btn-primary {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      padding: 9px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.2s ease;
+    }
+    .settings-btn-ghost {
+      color: #9C8770;
+      background: transparent;
+      border: 1px solid rgba(92, 70, 49, 0.16);
+    }
+    .settings-btn-primary {
+      color: #5C4631;
+      background: #F3EFE7;
+      border: 1px solid rgba(92, 70, 49, 0.22);
+      box-shadow: 0 1px 2px rgba(92, 70, 49, 0.06);
+    }
+    .settings-btn-primary:active,
+    .settings-btn-ghost:active { transform: scale(0.97); }
+    .settings-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: #9C8770;
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .settings-close:active { color: #5C4631; }
+
+    /* Settings ⚙ button in Journal header */
+    .btn-settings {
+      position: absolute;
+      top: 26px;
+      right: 22px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: #9C8770;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .btn-settings:active { color: #5C4631; }
+
+    /* ===================================================== */
+    /* Diary tab                                              */
+    /* ===================================================== */
+    .diary-view {
+      padding: 6px 4px 12px;
+    }
+
+    .diary-card {
+      position: relative;
+      padding: 22px 14px 26px;
+    }
+    .diary-card::after {
+      content: '';
+      position: absolute;
+      left: 12%; right: 12%;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(to right,
+        transparent 0%,
+        rgba(92, 70, 49, 0.2) 40%,
+        rgba(92, 70, 49, 0.2) 60%,
+        transparent 100%);
+    }
+    .diary-card:last-child::after { display: none; }
+
+    .diary-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .diary-date {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #9C8770;
+      letter-spacing: 0.8px;
+    }
+    .diary-senses {
+      display: inline-flex;
+      gap: 5px;
+    }
+    .diary-senses .picked-dot {
+      width: 9px;
+      height: 9px;
+    }
+
+    .diary-body {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 16px;
+      color: #5C4631;
+      line-height: 1.8;
+      letter-spacing: 0.3px;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .diary-rewrite {
+      display: block;
+      margin-left: auto;
+      margin-top: 14px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #B5A38B;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 2px;
+      letter-spacing: 1.2px;
+    }
+    .diary-rewrite:active { color: #6B5340; }
+
+    .diary-empty {
+      text-align: center;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      color: #9C8770;
+      font-size: 14px;
+      margin-top: 40px;
+      letter-spacing: 0.5px;
+      line-height: 1.8;
+    }
+
+    .diary-today-action {
+      text-align: center;
+      padding: 32px 16px 24px;
+    }
+    .diary-today-action .btn-primary {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 15px;
+      padding: 12px 28px;
+      color: #5C4631;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.2);
+      border-radius: 999px;
+      cursor: pointer;
+      letter-spacing: 1.2px;
+      box-shadow:
+        0 1px 2px rgba(92, 70, 49, 0.08),
+        0 4px 14px rgba(92, 70, 49, 0.06);
+    }
+    .diary-today-action .btn-primary:active { transform: scale(0.97); }
+    .diary-today-action .btn-primary[disabled] {
+      opacity: 0.55;
+      cursor: default;
+      pointer-events: none;
+    }
+    .diary-today-hint {
+      margin-top: 10px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #B5A38B;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===================================================== */
+    /* Month summary card                                     */
+    /* ===================================================== */
+    .month-summary {
+      margin: 6px 14px 14px;
+      padding: 14px 16px 14px;
+      border-radius: 8px;
+      background: rgba(251, 247, 238, 0.65);
+      border: 1px solid rgba(92, 70, 49, 0.12);
+    }
+    .month-summary[hidden] { display: none; }
+
+    .month-summary-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #9C8770;
+      letter-spacing: 1.4px;
+      margin-bottom: 8px;
+    }
+
+    .month-summary-senses {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .month-summary-senses .ms-sense {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #5C4631;
+      letter-spacing: 0.4px;
+    }
+    .month-summary-senses .picked-dot {
+      width: 9px;
+      height: 9px;
+    }
+
+    .month-summary-keywords {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #5C4631;
+      letter-spacing: 1px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+    .month-summary-keywords:empty { display: none; }
+
+    .month-summary-oneline {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #5C4631;
+      letter-spacing: 0.4px;
+      margin-top: 6px;
+      line-height: 1.6;
+      min-height: 22px;
+    }
+    .month-summary-oneline:empty { display: none; }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+
+    <!-- ===== Screen 1: Home ===== -->
+    <section class="view active" id="view-home">
+      <header class="home-header">
+        <button class="link-journal" id="link-journal" type="button">일기 ›</button>
+        <div class="home-date" id="home-date"></div>
+        <h1 class="home-title">어떤 감각을 기록하고 싶나요?</h1>
+      </header>
+
+      <div class="home-stage" id="home-stage">
+        <div class="sense-circle sense-sight"   data-sense="sight"  ><div class="sense-blob"></div><span class="sense-label">시각</span></div>
+        <div class="sense-circle sense-hearing" data-sense="hearing"><div class="sense-blob"></div><span class="sense-label">청각</span></div>
+        <div class="sense-circle sense-smell"   data-sense="smell"  ><div class="sense-blob"></div><span class="sense-label">후각</span></div>
+        <div class="sense-circle sense-taste"   data-sense="taste"  ><div class="sense-blob"></div><span class="sense-label">미각</span></div>
+        <div class="sense-circle sense-touch"   data-sense="touch"  ><div class="sense-blob"></div><span class="sense-label">촉감</span></div>
+      </div>
+
+      <footer class="home-footer">
+        <div class="divider"></div>
+        <div class="home-counter" id="home-counter">감각을 골라주세요</div>
+        <button class="btn-next" id="btn-next" type="button">다음</button>
+      </footer>
+    </section>
+
+    <!-- ===== Screen 2: Input (photo + one line) ===== -->
+    <section class="view" id="view-input">
+      <header class="input-header">
+        <div class="picked-row" id="picked-dots"></div>
+        <div class="picked-names" id="picked-names"></div>
+      </header>
+
+      <div class="input-body">
+        <h2 class="input-title">사진과 한 줄로 적어보세요</h2>
+
+        <div class="photo-frame" id="photo-frame">
+          <img class="photo-preview" id="photo-preview" alt="">
+          <div class="photo-empty">사진은 자유롭게, 한 줄은 꼭 남겨주세요</div>
+          <button class="photo-remove" id="photo-remove" type="button" aria-label="사진 지우기">✕</button>
+        </div>
+
+        <div class="photo-buttons">
+          <label class="photo-btn">
+            <span>찍기</span>
+            <input type="file" accept="image/*" capture="environment" hidden id="photo-camera">
+          </label>
+          <label class="photo-btn">
+            <span>앨범</span>
+            <input type="file" accept="image/*" hidden id="photo-album">
+          </label>
+        </div>
+
+        <input
+          type="text"
+          id="text-input"
+          class="text-line"
+          placeholder="한 줄로 남기세요..."
+          maxlength="80"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+
+      <footer class="input-footer">
+        <button class="btn-back" id="btn-back" type="button">‹ 이전</button>
+        <button class="btn-save" id="btn-save" type="button">기록하기</button>
+      </footer>
+    </section>
+
+    <!-- ===== Screen 3: Done (record complete) ===== -->
+    <section class="view" id="view-done">
+      <div class="done-body">
+        <div class="done-cluster" id="done-cluster">
+          <div class="blend-circle" data-sense="sight"></div>
+          <div class="blend-circle" data-sense="hearing"></div>
+          <div class="blend-circle" data-sense="smell"></div>
+          <div class="blend-circle" data-sense="taste"></div>
+          <div class="blend-circle" data-sense="touch"></div>
+        </div>
+
+        <h2 class="done-title">기록되었어요</h2>
+        <p class="done-sub" id="done-sub">오늘의 1번째 감각</p>
+      </div>
+
+      <footer class="done-footer">
+        <button class="btn-secondary" id="btn-to-home" type="button">홈으로</button>
+        <button class="btn-primary"   id="btn-to-journal" type="button">일기로 가기 ›</button>
+      </footer>
+    </section>
+
+    <!-- ===== Screen 4: Journal (flow feed) ===== -->
+    <section class="view" id="view-journal">
+      <header class="journal-header">
+        <button class="btn-settings" id="btn-settings" type="button" aria-label="설정">⚙</button>
+        <h1 class="journal-title">나의 감각 일기</h1>
+        <div class="journal-tabs">
+          <button class="tab active" id="tab-flow" type="button">감각기록</button>
+          <button class="tab" id="tab-calendar" type="button">캘린더</button>
+          <button class="tab" id="tab-diary" type="button">일기장</button>
+        </div>
+      </header>
+
+      <div class="journal-body">
+        <div class="flow-view" id="flow-view">
+          <div class="entry-feed" id="entry-feed"></div>
+          <div class="entry-empty" id="entry-empty" hidden>
+            아직 기록이 없어요.<br>홈에서 첫 감각을 남겨보세요.
+          </div>
+        </div>
+
+        <div class="calendar-view" id="calendar-view" hidden>
+          <div class="month-summary" id="month-summary" hidden>
+            <div class="month-summary-title">이 달의 결</div>
+            <div class="month-summary-senses" id="month-summary-senses"></div>
+            <div class="month-summary-keywords" id="month-summary-keywords"></div>
+            <div class="month-summary-oneline" id="month-summary-oneline"></div>
+          </div>
+          <div class="cal-header">
+            <button class="cal-arrow" id="cal-prev" type="button" aria-label="이전 달">‹</button>
+            <span class="cal-month-label" id="cal-month-label"></span>
+            <button class="cal-arrow" id="cal-next" type="button" aria-label="다음 달">›</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-day-entries" id="cal-day-entries"></div>
+        </div>
+
+        <div class="diary-view" id="diary-view" hidden>
+          <div class="diary-feed" id="diary-feed"></div>
+        </div>
+      </div>
+
+      <nav class="bottom-nav">
+        <button class="nav-btn" id="nav-home" type="button">홈</button>
+        <button class="nav-btn active" id="nav-journal" type="button">일기</button>
+      </nav>
+    </section>
+
+    <!-- Settings modal -->
+    <div class="settings-overlay" id="settings-overlay" hidden>
+      <div class="settings-modal" role="dialog" aria-label="AI 설정">
+        <h3 class="settings-title">AI 설정</h3>
+        <label class="settings-label" for="settings-key">Gemini API 키</label>
+        <input
+          class="settings-input"
+          id="settings-key"
+          type="password"
+          placeholder="키를 붙여넣어 주세요"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <a class="settings-link" id="settings-help"
+           href="https://aistudio.google.com/app/apikey"
+           target="_blank" rel="noopener">키 발급받는 법 ›</a>
+        <div class="settings-actions">
+          <button class="settings-btn-ghost" id="settings-clear" type="button">지우기</button>
+          <button class="settings-btn-primary" id="settings-save" type="button">저장</button>
+        </div>
+        <button class="settings-close" id="settings-close" type="button" aria-label="닫기">✕</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    'use strict';
+
+    // ---------- State ----------
+    const state = {
+      selectedSenses: new Set(),
+      photoBlob: null,
+      text: ''
+    };
+
+    const SENSE_LABELS = {
+      sight: '시각', hearing: '청각', smell: '후각', taste: '미각', touch: '촉감'
+    };
+
+    // ---------- View routing ----------
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+    }
+
+    // ---------- IndexedDB ----------
+    const DB_NAME = 'sensory-journal';
+    const DB_VERSION = 2;
+    const STORE = 'entries';
+    const STORE_DIARIES = 'daily_diaries';
+    const STORE_MONTH = 'month_summaries';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(STORE)) {
+            const store = db.createObjectStore(STORE, { keyPath: 'id' });
+            store.createIndex('createdAt', 'createdAt');
+          }
+          if (!db.objectStoreNames.contains(STORE_DIARIES)) {
+            db.createObjectStore(STORE_DIARIES, { keyPath: 'dateKey' });
+          }
+          if (!db.objectStoreNames.contains(STORE_MONTH)) {
+            db.createObjectStore(STORE_MONTH, { keyPath: 'monthKey' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function addEntry(entry) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).add(entry);
+        tx.oncomplete = () => resolve();
+        tx.onerror    = () => reject(tx.error);
+      });
+    }
+
+    async function getAllEntries() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function getDiary(dateKey) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_DIARIES, 'readonly');
+        const req = tx.objectStore(STORE_DIARIES).get(dateKey);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function putDiary(diary) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_DIARIES, 'readwrite');
+        tx.objectStore(STORE_DIARIES).put(diary);
+        tx.oncomplete = () => resolve();
+        tx.onerror    = () => reject(tx.error);
+      });
+    }
+
+    async function getAllDiaries() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_DIARIES, 'readonly');
+        const req = tx.objectStore(STORE_DIARIES).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function getMonthSummary(monthKey) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_MONTH, 'readonly');
+        const req = tx.objectStore(STORE_MONTH).get(monthKey);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function putMonthSummary(summary) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_MONTH, 'readwrite');
+        tx.objectStore(STORE_MONTH).put(summary);
+        tx.oncomplete = () => resolve();
+        tx.onerror    = () => reject(tx.error);
+      });
+    }
+
+    // Hash entries list (id + text) into a short fingerprint.
+    // Photo blobs are intentionally excluded — text is the only AI input.
+    async function fingerprintEntries(entries) {
+      const sorted = entries.slice().sort((a, b) => a.id - b.id);
+      const joined = sorted.map(e => `${e.id}:${e.text || ''}`).join('|');
+      const buf = new TextEncoder().encode(joined);
+      const hashBuf = await crypto.subtle.digest('SHA-1', buf);
+      const bytes = Array.from(new Uint8Array(hashBuf));
+      return bytes.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+    }
+
+    // ---------- Gemini API ----------
+    const GEMINI_MODEL = 'gemini-2.5-flash';
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+    function getApiKey() {
+      const k = (localStorage.getItem('geminiApiKey') || '').trim();
+      return k || null;
+    }
+
+    async function callGemini(systemText, userText) {
+      const key = getApiKey();
+      if (!key) {
+        const e = new Error('API key not set');
+        e.code = 'NO_KEY';
+        throw e;
+      }
+
+      const url = `${GEMINI_URL}?key=${encodeURIComponent(key)}`;
+      const body = {
+        systemInstruction: { parts: [{ text: systemText }] },
+        contents: [{ role: 'user', parts: [{ text: userText }] }]
+      };
+
+      let res;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } catch (networkErr) {
+        const e = new Error('Network failed');
+        e.code = 'NETWORK';
+        throw e;
+      }
+
+      if (res.status === 429) {
+        const e = new Error('Rate limit');
+        e.code = 'RATE_LIMIT';
+        throw e;
+      }
+      if (res.status === 401 || res.status === 403) {
+        const e = new Error('Auth failed');
+        e.code = 'AUTH';
+        throw e;
+      }
+      if (!res.ok) {
+        const e = new Error(`HTTP ${res.status}`);
+        e.code = 'HTTP';
+        throw e;
+      }
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (!text) {
+        const e = new Error('Empty response');
+        e.code = 'EMPTY';
+        throw e;
+      }
+      return text;
+    }
+
+    function geminiErrorMessage(err) {
+      switch (err && err.code) {
+        case 'NO_KEY':     return '먼저 ⚙ 에서 API 키를 입력해주세요.';
+        case 'NETWORK':    return '연결이 잠시 끊겼어요. 다시 시도해주세요.';
+        case 'RATE_LIMIT': return '오늘 무료 한도가 다 찼어요. 내일 다시 시도해주세요.';
+        case 'AUTH':       return 'API 키가 올바르지 않은 것 같아요. ⚙ 에서 확인해주세요.';
+        case 'EMPTY':      return '응답이 비어 있어요. 잠시 후 다시 시도해주세요.';
+        default:           return '지금은 일기를 못 만들었어요. 잠시 후 다시 시도해주세요.';
+      }
+    }
+
+    // ---------- Settings modal ----------
+    function openSettingsModal() {
+      const overlay = document.getElementById('settings-overlay');
+      const input   = document.getElementById('settings-key');
+      input.value = localStorage.getItem('geminiApiKey') || '';
+      overlay.hidden = false;
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-overlay').hidden = true;
+    }
+
+    function saveApiKey() {
+      const val = document.getElementById('settings-key').value.trim();
+      if (val) {
+        localStorage.setItem('geminiApiKey', val);
+      } else {
+        localStorage.removeItem('geminiApiKey');
+      }
+      closeSettingsModal();
+    }
+
+    function clearApiKey() {
+      if (!confirm('저장된 API 키를 지울까요?')) return;
+      localStorage.removeItem('geminiApiKey');
+      document.getElementById('settings-key').value = '';
+      closeSettingsModal();
+    }
+
+    function startOfTodayMs() {
+      const d = new Date();
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    }
+
+    async function getTodayCount() {
+      const all = await getAllEntries();
+      const start = startOfTodayMs();
+      return all.filter(e => new Date(e.createdAt).getTime() >= start).length;
+    }
+
+    // ---------- Date ----------
+    function renderDate() {
+      const d = new Date();
+      const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+      const days   = ['일','월','화','수','목','금','토'];
+      const txt = `${d.getFullYear()}년 ${months[d.getMonth()]} ${d.getDate()}일 ${days[d.getDay()]}요일`;
+      document.getElementById('home-date').textContent = txt;
+    }
+
+    // ---------- Sense toggle ----------
+    function toggleSense(sense, el) {
+      if (state.selectedSenses.has(sense)) {
+        state.selectedSenses.delete(sense);
+        el.classList.remove('selected');
+      } else {
+        state.selectedSenses.add(sense);
+        el.classList.add('selected');
+      }
+      updateHomeFooter();
+    }
+
+    function updateHomeFooter() {
+      const n = state.selectedSenses.size;
+      const counter = document.getElementById('home-counter');
+      const btn = document.getElementById('btn-next');
+      if (n === 0) {
+        counter.textContent = '감각을 골라주세요';
+        btn.classList.remove('enabled');
+      } else {
+        counter.textContent = `${n}개 선택됨 · 중복 가능`;
+        btn.classList.add('enabled');
+      }
+    }
+
+    // ---------- Screen 2 helpers ----------
+    function renderPicked() {
+      const dotsEl  = document.getElementById('picked-dots');
+      const namesEl = document.getElementById('picked-names');
+      dotsEl.innerHTML = '';
+      const picked = [...state.selectedSenses];
+      picked.forEach(s => {
+        const d = document.createElement('span');
+        d.className = 'picked-dot ' + s;
+        dotsEl.appendChild(d);
+      });
+      namesEl.textContent = picked.map(s => SENSE_LABELS[s]).join(' · ');
+    }
+
+    function handlePhotoFile(file) {
+      if (!file) return;
+      state.photoBlob = file;
+      const img = document.getElementById('photo-preview');
+      if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+      img.src = URL.createObjectURL(file);
+      document.getElementById('photo-frame').classList.add('has-photo');
+    }
+
+    function removePhoto() {
+      state.photoBlob = null;
+      const img = document.getElementById('photo-preview');
+      if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+      img.removeAttribute('src');
+      document.getElementById('photo-frame').classList.remove('has-photo');
+      document.getElementById('photo-camera').value = '';
+      document.getElementById('photo-album').value  = '';
+    }
+
+    function updateSaveButton() {
+      const btn = document.getElementById('btn-save');
+      const ready = state.text.trim().length > 0;
+      btn.classList.toggle('enabled', ready);
+    }
+
+    function resetInputDraft() {
+      state.text = '';
+      state.photoBlob = null;
+      document.getElementById('text-input').value = '';
+      removePhoto();
+      updateSaveButton();
+    }
+
+    function resetHome() {
+      state.selectedSenses.clear();
+      document.querySelectorAll('.sense-circle').forEach(el => el.classList.remove('selected'));
+      updateHomeFooter();
+    }
+
+    // ---------- Screen 3 helpers ----------
+    function renderDoneCluster() {
+      document.querySelectorAll('.blend-circle').forEach(el => {
+        el.classList.toggle('show', state.selectedSenses.has(el.dataset.sense));
+      });
+    }
+
+    // ---------- Screen 4 helpers ----------
+    function formatEntryTime(iso) {
+      const d = new Date(iso);
+      const month = d.getMonth() + 1;
+      const date  = d.getDate();
+      const hh    = d.getHours();
+      const mm    = d.getMinutes();
+      const am    = hh < 12;
+      const h12   = ((hh + 11) % 12) + 1;
+      return `${month}월 ${date}일 · ${am ? '오전' : '오후'} ${h12}:${String(mm).padStart(2, '0')}`;
+    }
+
+    // Track blob URLs created so we can free them on re-render
+    let feedBlobUrls = [];
+    function freeFeedBlobUrls() {
+      feedBlobUrls.forEach(u => URL.revokeObjectURL(u));
+      feedBlobUrls = [];
+    }
+
+    function buildEntryCard(e) {
+      const card = document.createElement('article');
+      card.className = 'entry-card';
+
+      const head = document.createElement('header');
+      head.className = 'entry-head';
+
+      const time = document.createElement('span');
+      time.className = 'entry-time';
+      time.textContent = formatEntryTime(e.createdAt);
+      head.appendChild(time);
+
+      const dots = document.createElement('span');
+      dots.className = 'entry-dots';
+      (e.senses || []).forEach(s => {
+        const d = document.createElement('span');
+        d.className = 'picked-dot ' + s;
+        dots.appendChild(d);
+      });
+      head.appendChild(dots);
+
+      card.appendChild(head);
+
+      if (e.photoBlob) {
+        const img = document.createElement('img');
+        img.className = 'entry-photo';
+        const url = URL.createObjectURL(e.photoBlob);
+        feedBlobUrls.push(url);
+        img.src = url;
+        img.alt = '';
+        card.appendChild(img);
+      }
+
+      const p = document.createElement('p');
+      p.className = 'entry-text';
+      p.textContent = e.text;
+      card.appendChild(p);
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'entry-delete';
+      del.textContent = '지우기';
+      del.addEventListener('click', () => deleteEntry(e.id));
+      card.appendChild(del);
+
+      return card;
+    }
+
+    async function deleteEntry(id) {
+      if (!confirm('이 기록을 지울까요?')) return;
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(id);
+        tx.oncomplete = resolve;
+        tx.onerror    = () => reject(tx.error);
+      });
+      // Refresh whichever tab is active
+      if (!document.getElementById('calendar-view').hidden) {
+        await renderCalendar();
+      } else {
+        await renderJournal();
+      }
+    }
+
+    async function renderJournal() {
+      const feed  = document.getElementById('entry-feed');
+      const empty = document.getElementById('entry-empty');
+
+      freeFeedBlobUrls();
+      feed.innerHTML = '';
+
+      const all = await getAllEntries();
+      all.sort((a, b) => b.id - a.id);
+
+      if (all.length === 0) {
+        empty.hidden = false;
+        return;
+      }
+      empty.hidden = true;
+      all.forEach(e => feed.appendChild(buildEntryCard(e)));
+    }
+
+    // ---------- Calendar ----------
+    const calState = {
+      year:  new Date().getFullYear(),
+      month: new Date().getMonth(),
+      selectedDate: null  // 'YYYY-MM-DD' or null
+    };
+
+    function dateKey(year, monthIdx, day) {
+      return `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    function buildCalThumb(entries) {
+      const thumb = document.createElement('span');
+      thumb.className = 'cal-thumb';
+
+      if (!entries || entries.length === 0) {
+        return thumb;  // empty square — keeps every cell the same height
+      }
+
+      // Prefer the latest entry with a photo; otherwise the latest entry's first sense.
+      const sorted = entries.slice().sort((a, b) => b.id - a.id);
+      const rep = sorted.find(e => e.photoBlob) || sorted[0];
+
+      if (rep.photoBlob) {
+        const img = document.createElement('img');
+        const url = URL.createObjectURL(rep.photoBlob);
+        feedBlobUrls.push(url);
+        img.src = url;
+        img.alt = '';
+        thumb.appendChild(img);
+      } else {
+        const firstSense = (rep.senses || [])[0];
+        if (firstSense) thumb.classList.add('blob-' + firstSense);
+      }
+      return thumb;
+    }
+
+    function monthKeyOf(year, monthIdx) {
+      return `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+    }
+
+    function entriesInMonth(entries, year, monthIdx) {
+      return entries.filter(e => {
+        const d = new Date(e.createdAt);
+        return d.getFullYear() === year && d.getMonth() === monthIdx;
+      });
+    }
+
+    function topSenseCounts(entries, n) {
+      const counts = {};
+      entries.forEach(e => (e.senses || []).forEach(s => {
+        counts[s] = (counts[s] || 0) + 1;
+      }));
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, n);
+    }
+
+    function renderMonthSummaryLocal(monthEntries) {
+      const sensesEl = document.getElementById('month-summary-senses');
+      const card     = document.getElementById('month-summary');
+
+      if (monthEntries.length === 0) {
+        card.hidden = true;
+        return;
+      }
+      card.hidden = false;
+
+      sensesEl.innerHTML = '';
+      topSenseCounts(monthEntries, 3).forEach(([sense, count]) => {
+        const wrap = document.createElement('span');
+        wrap.className = 'ms-sense';
+        const dot = document.createElement('span');
+        dot.className = 'picked-dot ' + sense;
+        wrap.appendChild(dot);
+        const label = document.createElement('span');
+        label.textContent = `${SENSE_LABELS[sense] || sense} ${count}`;
+        wrap.appendChild(label);
+        sensesEl.appendChild(wrap);
+      });
+
+      // AI parts cleared here; Task 9 will populate them.
+      document.getElementById('month-summary-keywords').textContent = '';
+      document.getElementById('month-summary-oneline').textContent = '';
+    }
+
+    async function renderCalendar() {
+      // Free any object URLs from a previous render BEFORE we start creating new ones.
+      freeFeedBlobUrls();
+
+      const all = await getAllEntries();
+      const monthEntries = entriesInMonth(all, calState.year, calState.month);
+      renderMonthSummaryLocal(monthEntries);
+
+      // Background: AI keywords + oneLine. Render when ready.
+      // Capture current month — if user navigates away, ignore the result.
+      const renderYearAtStart  = calState.year;
+      const renderMonthAtStart = calState.month;
+      ensureMonthSummary(renderYearAtStart, renderMonthAtStart, monthEntries)
+        .then(summary => {
+          if (calState.year === renderYearAtStart &&
+              calState.month === renderMonthAtStart) {
+            renderMonthSummaryAi(summary);
+          }
+        });
+
+      const byDay = {};
+      all.forEach(e => {
+        const d = new Date(e.createdAt);
+        const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        (byDay[key] = byDay[key] || []).push(e);
+      });
+
+      document.getElementById('cal-month-label').textContent =
+        `${calState.year}년 ${calState.month + 1}월`;
+
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+
+      const first        = new Date(calState.year, calState.month, 1);
+      const startWeekday = first.getDay();
+      const daysInMonth  = new Date(calState.year, calState.month + 1, 0).getDate();
+      const prevLast     = new Date(calState.year, calState.month, 0).getDate();
+      const today        = new Date();
+      const todayKey     = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+      // Previous-month padding
+      for (let i = startWeekday - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell outside';
+        const num = document.createElement('span');
+        num.className = 'cal-num';
+        num.textContent = prevLast - i;
+        cell.appendChild(num);
+        cell.appendChild(buildCalThumb([]));
+        grid.appendChild(cell);
+      }
+
+      // Current month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = dateKey(calState.year, calState.month, day);
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'cal-cell';
+        if (key === todayKey) cell.classList.add('today');
+        if (key === calState.selectedDate) cell.classList.add('selected');
+
+        const num = document.createElement('span');
+        num.className = 'cal-num';
+        num.textContent = day;
+        cell.appendChild(num);
+
+        const entries = byDay[key] || [];
+        if (entries.length > 0) cell.classList.add('has-content');
+        cell.appendChild(buildCalThumb(entries));
+
+        cell.addEventListener('click', () => {
+          calState.selectedDate = (calState.selectedDate === key) ? null : key;
+          renderCalendar();
+        });
+
+        grid.appendChild(cell);
+      }
+
+      // Next-month padding
+      const remainder = (startWeekday + daysInMonth) % 7;
+      if (remainder > 0) {
+        for (let i = 1; i <= 7 - remainder; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'cal-cell outside';
+          const num = document.createElement('span');
+          num.className = 'cal-num';
+          num.textContent = i;
+          cell.appendChild(num);
+          cell.appendChild(buildCalThumb([]));
+          grid.appendChild(cell);
+        }
+      }
+
+      // Selected day's entries — DO NOT freeFeedBlobUrls here, the calendar
+      // thumbnails above already added their URLs to feedBlobUrls.
+      const dayContainer = document.getElementById('cal-day-entries');
+      dayContainer.innerHTML = '';
+
+      if (calState.selectedDate) {
+        const [, mm, dd] = calState.selectedDate.split('-');
+        const header = document.createElement('div');
+        header.className = 'cal-day-header';
+        header.textContent = `${parseInt(mm, 10)}월 ${parseInt(dd, 10)}일`;
+        dayContainer.appendChild(header);
+
+        const entries = (byDay[calState.selectedDate] || []).slice().sort((a, b) => b.id - a.id);
+        if (entries.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'cal-no-entries';
+          empty.textContent = '이 날의 기록이 없어요';
+          dayContainer.appendChild(empty);
+        } else {
+          entries.forEach(e => dayContainer.appendChild(buildEntryCard(e)));
+        }
+      }
+    }
+
+    function setTab(name) {
+      document.getElementById('tab-flow').classList.toggle('active',     name === 'flow');
+      document.getElementById('tab-calendar').classList.toggle('active', name === 'calendar');
+      document.getElementById('tab-diary').classList.toggle('active',    name === 'diary');
+      document.getElementById('flow-view').hidden     = (name !== 'flow');
+      document.getElementById('calendar-view').hidden = (name !== 'calendar');
+      document.getElementById('diary-view').hidden    = (name !== 'diary');
+      document.querySelector('.journal-body').classList.toggle('mode-calendar', name === 'calendar');
+    }
+
+    // ---------- Diary tab ----------
+    function todayDateKey() {
+      const d = new Date();
+      return dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function formatDiaryDate(key) {
+      const [y, m, d] = key.split('-').map(Number);
+      const days = ['일','월','화','수','목','금','토'];
+      const wd = new Date(y, m - 1, d).getDay();
+      return `${m}월 ${d}일 ${days[wd]}요일`;
+    }
+
+    function groupEntriesByDay(entries) {
+      const map = new Map();
+      entries.forEach(e => {
+        const d = new Date(e.createdAt);
+        const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(e);
+      });
+      return map;
+    }
+
+    function distinctSensesForDay(entries) {
+      const seen = new Set();
+      const out = [];
+      entries.forEach(e => (e.senses || []).forEach(s => {
+        if (!seen.has(s)) { seen.add(s); out.push(s); }
+      }));
+      return out;
+    }
+
+    function buildDiaryCard(dateKey, bodyText, senses) {
+      const card = document.createElement('article');
+      card.className = 'diary-card';
+
+      const head = document.createElement('header');
+      head.className = 'diary-head';
+      const dateEl = document.createElement('span');
+      dateEl.className = 'diary-date';
+      dateEl.textContent = formatDiaryDate(dateKey);
+      head.appendChild(dateEl);
+
+      const dots = document.createElement('span');
+      dots.className = 'diary-senses';
+      senses.forEach(s => {
+        const dot = document.createElement('span');
+        dot.className = 'picked-dot ' + s;
+        dots.appendChild(dot);
+      });
+      head.appendChild(dots);
+
+      card.appendChild(head);
+
+      const body = document.createElement('p');
+      body.className = 'diary-body';
+      body.textContent = bodyText;
+      card.appendChild(body);
+
+      return card;
+    }
+
+    async function renderDiaryTab() {
+      const feed = document.getElementById('diary-feed');
+      feed.innerHTML = '';
+
+      const entries  = await getAllEntries();
+      const diaries  = await getAllDiaries();
+      const byDay    = groupEntriesByDay(entries);
+      const diaryMap = new Map(diaries.map(d => [d.dateKey, d]));
+
+      const today = todayDateKey();
+      const todayEntries = byDay.get(today) || [];
+      const todayDiary   = diaryMap.get(today);
+
+      // --- Today slot ---
+      if (todayEntries.length === 0 && !todayDiary) {
+        const empty = document.createElement('div');
+        empty.className = 'diary-empty';
+        empty.innerHTML = '오늘은 아직 기록이 없어요.<br>홈에서 감각을 남기고 다시 와주세요.';
+        feed.appendChild(empty);
+      } else if (todayDiary) {
+        const senses = distinctSensesForDay(todayEntries);
+        const card = buildDiaryCard(today, todayDiary.text, senses);
+        const rewrite = document.createElement('button');
+        rewrite.type = 'button';
+        rewrite.className = 'diary-rewrite';
+        rewrite.textContent = '다시 쓰기';
+        rewrite.addEventListener('click', () => rewriteTodayDiary());
+        card.appendChild(rewrite);
+        feed.appendChild(card);
+      } else {
+        const action = document.createElement('div');
+        action.className = 'diary-today-action';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-primary';
+        btn.id = 'btn-generate-today';
+        btn.textContent = '오늘 일기 쓰기';
+        btn.addEventListener('click', () => generateTodayDiary());
+        action.appendChild(btn);
+        const hint = document.createElement('div');
+        hint.className = 'diary-today-hint';
+        hint.textContent = `오늘 감각 ${todayEntries.length}개를 모아 일기로 묶어요`;
+        action.appendChild(hint);
+        feed.appendChild(action);
+      }
+
+      // --- Past diaries (newest first, excluding today) ---
+      const pastKeys = diaries
+        .map(d => d.dateKey)
+        .filter(k => k !== today)
+        .sort((a, b) => b.localeCompare(a));
+      pastKeys.forEach(k => {
+        const diary = diaryMap.get(k);
+        const senses = distinctSensesForDay(byDay.get(k) || []);
+        feed.appendChild(buildDiaryCard(k, diary.text, senses));
+      });
+    }
+
+    // ---------- Generate today's diary via Gemini ----------
+    const DIARY_SYSTEM_PROMPT = [
+      '너는 사용자가 하루 동안 남긴 짧은 감각 메모들을 보고,',
+      '그 사람 본인이 쓴 것 같은 담담한 일기로 묶어주는 도우미야.',
+      '',
+      '규칙:',
+      '- 어미는 ~이었다 / ~다 (담담한 1인칭)',
+      '- 과장된 비유, 시적 표현, 감탄사 금지',
+      '- 한 문단, 5~7문장',
+      '- 메모에 없는 사실을 지어내지 말 것',
+      '- 시간 순서가 자연스럽게 흐르게 묶기',
+      '- 감각 이름(시각/청각 등)을 본문에 그대로 노출하지 말기',
+      '',
+      '오직 일기 본문만 출력해. 인사말, 머리말, 부연 설명 금지.'
+    ].join('\n');
+
+    function formatEntriesForPrompt(entries) {
+      return entries
+        .slice()
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map(e => {
+          const d = new Date(e.createdAt);
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          const senses = (e.senses || []).map(s => SENSE_LABELS[s] || s).join('·');
+          return `[${hh}:${mm} · ${senses}] ${e.text}`;
+        })
+        .join('\n');
+    }
+
+    async function generateTodayDiary(opts) {
+      const force = !!(opts && opts.force);
+      const dkey = todayDateKey();
+      const entries = await getAllEntries();
+      const todayEntries = entries.filter(e => {
+        const d = new Date(e.createdAt);
+        return dkey === dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+      });
+
+      if (todayEntries.length === 0) {
+        alert('오늘 감각 기록이 아직 없어요.');
+        return;
+      }
+
+      if (!getApiKey()) {
+        openSettingsModal();
+        return;
+      }
+
+      const fp = await fingerprintEntries(todayEntries);
+      if (!force) {
+        const existing = await getDiary(dkey);
+        if (existing && existing.sourceFingerprint === fp) {
+          await renderDiaryTab();
+          return;
+        }
+      }
+
+      const btn = document.getElementById('btn-generate-today');
+      if (btn) { btn.disabled = true; btn.textContent = '쓰는 중…'; }
+
+      try {
+        const userText = formatEntriesForPrompt(todayEntries);
+        const text = (await callGemini(DIARY_SYSTEM_PROMPT, userText)).trim();
+        await putDiary({
+          dateKey: dkey,
+          text,
+          generatedAt: new Date().toISOString(),
+          sourceFingerprint: fp
+        });
+        await renderDiaryTab();
+      } catch (err) {
+        alert(geminiErrorMessage(err));
+        if (btn) { btn.disabled = false; btn.textContent = '오늘 일기 쓰기'; }
+        if (err && err.code === 'NO_KEY') openSettingsModal();
+      }
+    }
+
+    async function rewriteTodayDiary() {
+      if (!confirm('오늘 일기를 다시 쓸까요? 지금 글은 사라져요.')) return;
+      await generateTodayDiary({ force: true });
+    }
+
+    // ---------- Month summary AI ----------
+    const MONTH_SYSTEM_PROMPT = [
+      '한 달치 감각 메모들을 보고 다음을 뽑아줘.',
+      '오직 JSON만 답해. 다른 설명 일절 금지.',
+      '',
+      '{',
+      '  "keywords": ["...", "...", "..."],',
+      '  "oneLine": "..."',
+      '}',
+      '',
+      '규칙:',
+      '- keywords는 자주 보인 감정/분위기 명사 또는 명사형(따뜻함, 조용, 설렘 같은) 3~5개',
+      '- oneLine은 과장 없이 담담하게 ~다 어미로 한 문장(25자 이내 권장)'
+    ].join('\n');
+
+    function tryParseSummaryJson(text) {
+      try { return JSON.parse(text); } catch (_) {}
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        try { return JSON.parse(match[0]); } catch (_) {}
+      }
+      return null;
+    }
+
+    async function ensureMonthSummary(year, monthIdx, monthEntries) {
+      if (monthEntries.length === 0) return null;
+      if (!getApiKey()) return null;  // Silent skip for background call
+
+      const mk = monthKeyOf(year, monthIdx);
+      const fp = await fingerprintEntries(monthEntries);
+      const cached = await getMonthSummary(mk);
+      if (cached && cached.fingerprint === fp) return cached;
+
+      const userText = monthEntries
+        .slice()
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map(e => {
+          const d = new Date(e.createdAt);
+          const day = d.getDate();
+          const senses = (e.senses || []).map(s => SENSE_LABELS[s] || s).join('·');
+          return `${day}일 · ${senses} · ${e.text}`;
+        })
+        .join('\n');
+
+      let parsed;
+      try {
+        const raw = await callGemini(MONTH_SYSTEM_PROMPT, userText);
+        parsed = tryParseSummaryJson(raw);
+      } catch (err) {
+        return null;
+      }
+      if (!parsed || !Array.isArray(parsed.keywords) || typeof parsed.oneLine !== 'string') {
+        return null;
+      }
+
+      const summary = {
+        monthKey: mk,
+        keywords: parsed.keywords.slice(0, 5).map(String),
+        oneLine: parsed.oneLine.toString(),
+        fingerprint: fp,
+        generatedAt: new Date().toISOString()
+      };
+      await putMonthSummary(summary);
+      return summary;
+    }
+
+    function renderMonthSummaryAi(summary) {
+      const kw = document.getElementById('month-summary-keywords');
+      const ol = document.getElementById('month-summary-oneline');
+      if (!summary) {
+        kw.textContent = '';
+        ol.textContent = '';
+        return;
+      }
+      kw.textContent = summary.keywords.length
+        ? `"${summary.keywords.join(' · ')}"`
+        : '';
+      ol.textContent = summary.oneLine ? `"${summary.oneLine}"` : '';
+    }
+
+    async function enterJournal() {
+      setTab('flow');
+      await renderJournal();
+    }
+
+    async function saveAndShowDone() {
+      const entry = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        senses: [...state.selectedSenses],
+        photoBlob: state.photoBlob,
+        text: state.text.trim()
+      };
+      try {
+        await addEntry(entry);
+      } catch (err) {
+        alert('저장에 실패했어요: ' + err.message);
+        return;
+      }
+      renderDoneCluster();
+      const n = await getTodayCount();
+      document.getElementById('done-sub').textContent = `오늘의 ${n}번째 감각`;
+      showView('done');
+    }
+
+    // ---------- Init ----------
+    function init() {
+      renderDate();
+
+      // Home: sense circles
+      document.querySelectorAll('.sense-circle').forEach(el => {
+        el.addEventListener('click', () => toggleSense(el.dataset.sense, el));
+      });
+
+      // Home → Journal (top-right link)
+      document.getElementById('link-journal').addEventListener('click', async () => {
+        await enterJournal();
+        showView('journal');
+      });
+
+      // Home → Input
+      document.getElementById('btn-next').addEventListener('click', () => {
+        if (state.selectedSenses.size === 0) return;
+        resetInputDraft();
+        renderPicked();
+        showView('input');
+      });
+
+      // Input → Home
+      document.getElementById('btn-back').addEventListener('click', () => {
+        showView('home');
+      });
+
+      // Photo inputs
+      document.getElementById('photo-camera').addEventListener('change', e => handlePhotoFile(e.target.files[0]));
+      document.getElementById('photo-album').addEventListener('change',  e => handlePhotoFile(e.target.files[0]));
+      document.getElementById('photo-remove').addEventListener('click', removePhoto);
+
+      // Text input
+      document.getElementById('text-input').addEventListener('input', e => {
+        state.text = e.target.value;
+        updateSaveButton();
+      });
+
+      // Save → IndexedDB → Done screen
+      document.getElementById('btn-save').addEventListener('click', saveAndShowDone);
+
+      // Done → Home (fresh)
+      document.getElementById('btn-to-home').addEventListener('click', () => {
+        resetHome();
+        showView('home');
+      });
+
+      // Done → Journal
+      document.getElementById('btn-to-journal').addEventListener('click', async () => {
+        resetHome(); // clear home selection so returning home is fresh
+        await enterJournal();
+        showView('journal');
+      });
+
+      // Bottom nav (Journal screen)
+      document.getElementById('nav-home').addEventListener('click', () => {
+        resetHome();
+        showView('home');
+      });
+      document.getElementById('nav-journal').addEventListener('click', enterJournal);
+
+      // Journal tabs
+      document.getElementById('tab-flow').addEventListener('click', async () => {
+        setTab('flow');
+        await renderJournal();
+      });
+      document.getElementById('tab-calendar').addEventListener('click', async () => {
+        setTab('calendar');
+        await renderCalendar();
+      });
+      document.getElementById('tab-diary').addEventListener('click', async () => {
+        setTab('diary');
+        await renderDiaryTab();
+      });
+
+      // Calendar month nav
+      function goPrevMonth() {
+        calState.month--;
+        if (calState.month < 0) { calState.month = 11; calState.year--; }
+        calState.selectedDate = null;
+        renderCalendar();
+      }
+      function goNextMonth() {
+        calState.month++;
+        if (calState.month > 11) { calState.month = 0; calState.year++; }
+        calState.selectedDate = null;
+        renderCalendar();
+      }
+      document.getElementById('cal-prev').addEventListener('click', goPrevMonth);
+      document.getElementById('cal-next').addEventListener('click', goNextMonth);
+
+      // Calendar horizontal swipe (mobile) — left=next, right=prev
+      const calGridEl = document.getElementById('cal-grid');
+      let calTouchStart = null;
+      calGridEl.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        calTouchStart = { x: t.clientX, y: t.clientY };
+      }, { passive: true });
+      calGridEl.addEventListener('touchend', e => {
+        if (!calTouchStart) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - calTouchStart.x;
+        const dy = t.clientY - calTouchStart.y;
+        calTouchStart = null;
+        // Must be mostly horizontal and at least 50px
+        if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+        if (dx > 0) goPrevMonth();
+        else        goNextMonth();
+      }, { passive: true });
+
+      // Settings modal
+      document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
+      document.getElementById('settings-close').addEventListener('click', closeSettingsModal);
+      document.getElementById('settings-save').addEventListener('click', saveApiKey);
+      document.getElementById('settings-clear').addEventListener('click', clearApiKey);
+      document.getElementById('settings-overlay').addEventListener('click', e => {
+        if (e.target.id === 'settings-overlay') closeSettingsModal();
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
