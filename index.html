@@ -2034,24 +2034,39 @@
       if (res.status === 429) {
         const e = new Error('Rate limit');
         e.code = 'RATE_LIMIT';
+        e.diagStatus = 429;
+        try { e.diagBody = (await res.text()).slice(0, 400); } catch (_) {}
         throw e;
       }
       if (res.status === 401 || res.status === 403) {
         const e = new Error('Auth failed');
         e.code = 'AUTH';
+        e.diagStatus = res.status;
+        try { e.diagBody = (await res.text()).slice(0, 400); } catch (_) {}
         throw e;
       }
       if (!res.ok) {
         const e = new Error(`HTTP ${res.status}`);
         e.code = 'HTTP';
+        e.diagStatus = res.status;
+        try { e.diagBody = (await res.text()).slice(0, 400); } catch (_) {}
         throw e;
       }
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        const e = new Error('JSON parse failed');
+        e.code = 'PARSE';
+        e.diagMessage = (parseErr && parseErr.message) || '';
+        throw e;
+      }
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
       if (!text) {
         const e = new Error('Empty response');
         e.code = 'EMPTY';
+        try { e.diagBody = JSON.stringify(data).slice(0, 400); } catch (_) {}
         throw e;
       }
       return text;
@@ -2064,8 +2079,23 @@
         case 'RATE_LIMIT': return '오늘 무료 한도가 다 찼어요. 내일 다시 시도해주세요.';
         case 'AUTH':       return 'API 키가 올바르지 않은 것 같아요. ⚙ 에서 확인해주세요.';
         case 'EMPTY':      return '응답이 비어 있어요. 잠시 후 다시 시도해주세요.';
+        case 'HTTP':       return 'API 응답 오류가 났어요. 잠시 후 다시 시도해주세요.';
+        case 'PARSE':      return '응답을 읽지 못했어요. 잠시 후 다시 시도해주세요.';
         default:           return '지금은 일기를 못 만들었어요. 잠시 후 다시 시도해주세요.';
       }
+    }
+
+    // [#013 임시 진단판] 회귀 원인 특정 후 제거 예정.
+    // 에러 정보를 사용자에게 보이게 alert 부록으로 붙임 — 비서팀에 그대로 전달 가능.
+    function geminiDiagAppendix(err) {
+      const lines = [];
+      lines.push(`code: ${(err && err.code) || '(none)'}`);
+      if (err && err.diagStatus)  lines.push(`status: ${err.diagStatus}`);
+      if (err && err.diagBody)    lines.push(`body: ${err.diagBody}`);
+      if (err && err.diagMessage) lines.push(`detail: ${err.diagMessage}`);
+      if (err && err.message && !err.code) lines.push(`message: ${err.message}`);
+      lines.push(`model: ${GEMINI_MODEL}`);
+      return '\n\n[진단 정보 — 그대로 비서팀/개발팀에 전달]\n' + lines.join('\n');
     }
 
     // ---------- Settings modal ----------
@@ -3121,7 +3151,8 @@
         });
         await renderDiaryTab();
       } catch (err) {
-        alert(geminiErrorMessage(err));
+        // [#013 임시 진단판] 회귀 원인 특정 후 진단 부록 라인 제거.
+        alert(geminiErrorMessage(err) + geminiDiagAppendix(err));
         if (btn) { btn.disabled = false; btn.textContent = '오늘 일기 쓰기'; }
         if (err && err.code === 'NO_KEY') openSettingsModal();
       }
