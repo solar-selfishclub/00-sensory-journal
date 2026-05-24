@@ -686,9 +686,89 @@
 
     .journal-body {
       flex: 1;
-      overflow-y: auto;
+      position: relative;
+      overflow: hidden;
       padding: 8px 22px 16px;
     }
+
+    /* ----- Tab views: cross-fade between flow / calendar / diary ----- */
+    .flow-view, .calendar-view, .diary-view {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 320ms ease-out;
+    }
+    .flow-view[hidden], .calendar-view[hidden], .diary-view[hidden] {
+      display: flex;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .flow-view {
+      overflow: hidden;
+    }
+    .calendar-view, .diary-view {
+      overflow-y: auto;
+    }
+
+    /* ----- Flow tab: date header + slide ----- */
+    .flow-date-header {
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .flow-date-label {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 19px;
+      color: #5C4631;
+      letter-spacing: 0.01em;
+      font-style: normal;
+    }
+    .flow-arrow {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 0;
+      background: transparent;
+      color: #9C8770;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background 180ms;
+      font-family: 'Noto Serif KR', Georgia, serif;
+    }
+    .flow-arrow:active { background: rgba(92, 70, 49, 0.06); }
+    .flow-arrow.is-disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .flow-slide-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .flow-slide {
+      height: 100%;
+      overflow-y: auto;
+      transition: transform 220ms ease-out, opacity 220ms ease-out;
+      will-change: transform, opacity;
+    }
+    .flow-slide.exit-to-left  { transform: translateX(-100%); opacity: 0.6; }
+    .flow-slide.exit-to-right { transform: translateX(100%);  opacity: 0.6; }
+    .flow-slide.enter-from-right { transform: translateX(100%);  opacity: 0.6; }
+    .flow-slide.enter-from-left  { transform: translateX(-100%); opacity: 0.6; }
 
     .entry-empty {
       text-align: center;
@@ -1118,12 +1198,159 @@
     /* Diary tab                                              */
     /* ===================================================== */
     .diary-view {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* ----- Diary month header (#010) ----- */
+    .diary-month-header {
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .diary-month-label {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 19px;
+      color: #5C4631;
+      letter-spacing: 0.01em;
+      font-style: normal;
+    }
+    .diary-arrow {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 0;
+      background: transparent;
+      color: #9C8770;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background 180ms;
+      font-family: 'Noto Serif KR', Georgia, serif;
+    }
+    .diary-arrow:active { background: rgba(92, 70, 49, 0.06); }
+    .diary-arrow.is-disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* ----- Diary month slide (#010) ----- */
+    .diary-month-slide-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .diary-month-slide {
+      height: 100%;
+      overflow-y: auto;
+      transition: transform 220ms ease-out, opacity 220ms ease-out;
+      will-change: transform, opacity;
+    }
+    .diary-month-slide.exit-to-left     { transform: translateX(-100%); opacity: 0.6; }
+    .diary-month-slide.exit-to-right    { transform: translateX(100%);  opacity: 0.6; }
+    .diary-month-slide.enter-from-right { transform: translateX(100%);  opacity: 0.6; }
+    .diary-month-slide.enter-from-left  { transform: translateX(-100%); opacity: 0.6; }
+
+    .diary-feed {
       padding: 6px 4px 12px;
     }
+
+    .diary-empty-month {
+      text-align: center;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      color: #9C8770;
+      font-size: 14px;
+      padding-top: 80px;
+    }
+
+    /* ----- Diary card swipe-to-delete wrapper (#009) ----- */
+    .diary-card-wrap {
+      position: relative;
+      overflow: hidden;
+      transition: opacity 300ms ease-out, max-height 300ms ease-out, margin 300ms ease-out;
+    }
+    .diary-card-wrap.collapsing {
+      opacity: 0;
+      max-height: 0 !important;
+      margin: 0 !important;
+    }
+    .diary-trash {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80px;
+      height: 100%;
+      background: #E0B5AE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6B2E2A;
+      font-size: 24px;
+      cursor: pointer;
+      border: 0;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    /* ----- Diary photo carousel (#008) ----- */
+    .diary-photo-carousel {
+      position: relative;
+      width: 100%;
+      height: 240px;
+      margin: 14px 0 18px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .diary-photo-track {
+      height: 100%;
+      display: flex;
+      transition: transform 220ms ease-out;
+      will-change: transform;
+    }
+    .diary-photo-slide {
+      min-width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+    }
+    .diary-photo-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .diary-photo-dots.is-single { display: none; }
+    .diary-photo-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #FBF7EE;
+      opacity: 0.4;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+      transition: opacity 180ms;
+    }
+    .diary-photo-dot.is-current { opacity: 1; }
 
     .diary-card {
       position: relative;
       padding: 22px 14px 26px;
+      background: #FAF8F2;
+      transition: transform 200ms ease-out;
+      will-change: transform;
+    }
+    .diary-card.is-revealed {
+      transform: translateX(-80px);
     }
     .diary-card::after {
       content: '';
@@ -1547,9 +1774,19 @@
 
       <div class="journal-body">
         <div class="flow-view" id="flow-view">
-          <div class="entry-feed" id="entry-feed"></div>
-          <div class="entry-empty" id="entry-empty" hidden>
-            아직 기록이 없어요.<br>홈에서 첫 감각을 남겨보세요.
+          <div class="flow-date-header">
+            <button class="flow-arrow" id="flow-prev" type="button" aria-label="이전 날">‹</button>
+            <span class="flow-date-label" id="flow-date-label"></span>
+            <button class="flow-arrow" id="flow-next" type="button" aria-label="다음 날">›</button>
+          </div>
+          <div class="divider"></div>
+          <div class="flow-slide-wrap">
+            <div class="flow-slide" id="flow-slide">
+              <div class="entry-feed" id="entry-feed"></div>
+              <div class="entry-empty" id="entry-empty" hidden>
+                아직 기록이 없어요.<br>홈에서 첫 감각을 남겨보세요.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1573,7 +1810,17 @@
         </div>
 
         <div class="diary-view" id="diary-view" hidden>
-          <div class="diary-feed" id="diary-feed"></div>
+          <div class="diary-month-header">
+            <button class="diary-arrow" id="diary-month-prev" type="button" aria-label="이전 달">‹</button>
+            <span class="diary-month-label" id="diary-month-label"></span>
+            <button class="diary-arrow" id="diary-month-next" type="button" aria-label="다음 달">›</button>
+          </div>
+          <div class="divider"></div>
+          <div class="diary-month-slide-wrap">
+            <div class="diary-month-slide" id="diary-month-slide">
+              <div class="diary-feed" id="diary-feed"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1704,6 +1951,16 @@
         const req = tx.objectStore(STORE_DIARIES).getAll();
         req.onsuccess = () => resolve(req.result || []);
         req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function deleteDiary(dateKey) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_DIARIES, 'readwrite');
+        tx.objectStore(STORE_DIARIES).delete(dateKey);
+        tx.oncomplete = () => resolve();
+        tx.onerror    = () => reject(tx.error);
       });
     }
 
@@ -2110,22 +2367,107 @@
       }
     }
 
+    // ---------- Flow tab date state ----------
+    const flowState = {
+      date: new Date()  // currently viewed date in 감각기록 탭
+    };
+
+    function flowDateKey() {
+      const d = flowState.date;
+      return dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function isFlowToday() {
+      const t = new Date();
+      return flowDateKey() === dateKey(t.getFullYear(), t.getMonth(), t.getDate());
+    }
+
+    const _WDAY = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+    function formatFlowDateLabel(d) {
+      const head = isFlowToday() ? '오늘 · ' : '';
+      return `${head}${d.getMonth() + 1}월 ${d.getDate()}일 ${_WDAY[d.getDay()]}`;
+    }
+
+    function updateFlowDateHeader() {
+      document.getElementById('flow-date-label').textContent = formatFlowDateLabel(flowState.date);
+
+      // Future-date block: disable next button when tomorrow > today
+      const nextBtn = document.getElementById('flow-next');
+      const tomorrow = new Date(flowState.date);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      nextBtn.classList.toggle('is-disabled', tomorrow > todayEnd);
+    }
+
     async function renderJournal() {
       const feed  = document.getElementById('entry-feed');
       const empty = document.getElementById('entry-empty');
 
+      updateFlowDateHeader();
       freeFeedBlobUrls();
       feed.innerHTML = '';
 
       const all = await getAllEntries();
-      all.sort((a, b) => b.id - a.id);
+      const key = flowDateKey();
+      const filtered = all.filter(e => {
+        const d = new Date(e.createdAt);
+        return dateKey(d.getFullYear(), d.getMonth(), d.getDate()) === key;
+      });
+      filtered.sort((a, b) => b.id - a.id);
 
-      if (all.length === 0) {
+      if (filtered.length === 0) {
         empty.hidden = false;
+        empty.innerHTML = isFlowToday()
+          ? '아직 기록이 없어요.<br>홈에서 첫 감각을 남겨보세요.'
+          : '이 날엔 감각 기록이 없어요';
         return;
       }
       empty.hidden = true;
-      all.forEach(e => feed.appendChild(buildEntryCard(e)));
+      filtered.forEach(e => feed.appendChild(buildEntryCard(e)));
+    }
+
+    // ---------- Flow tab date navigation ----------
+    function goToFlowDate(newDate, direction) {
+      // direction: 'next' | 'prev' | null (null = immediate, no animation)
+      const slide = document.getElementById('flow-slide');
+
+      if (!direction) {
+        flowState.date = new Date(newDate);
+        return renderJournal();
+      }
+
+      const exitClass  = direction === 'next' ? 'exit-to-left'    : 'exit-to-right';
+      const enterClass = direction === 'next' ? 'enter-from-right' : 'enter-from-left';
+
+      slide.classList.add(exitClass);
+      slide.addEventListener('transitionend', async function onEnd(ev) {
+        if (ev.propertyName !== 'transform') return;
+        slide.removeEventListener('transitionend', onEnd);
+
+        slide.style.transition = 'none';
+        slide.classList.remove(exitClass);
+        slide.classList.add(enterClass);
+
+        flowState.date = new Date(newDate);
+        await renderJournal();
+
+        // force reflow then re-enable transition
+        void slide.offsetWidth;
+        slide.style.transition = '';
+        slide.classList.remove(enterClass);
+      });
+    }
+
+    function flowDateStep(days) {
+      const next = new Date(flowState.date);
+      next.setDate(next.getDate() + days);
+      // future block
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      if (next > todayEnd) return;
+      goToFlowDate(next, days > 0 ? 'next' : 'prev');
     }
 
     // ---------- Calendar ----------
@@ -2285,8 +2627,11 @@
         cell.appendChild(buildCalThumb(entries));
 
         cell.addEventListener('click', () => {
-          calState.selectedDate = (calState.selectedDate === key) ? null : key;
-          renderCalendar();
+          // Cross-fade to 감각기록 탭 with that date — #001+#002 묶음
+          const [yy, mm, dd] = key.split('-').map(n => parseInt(n, 10));
+          flowState.date = new Date(yy, mm - 1, dd);
+          setTab('flow');
+          renderJournal();
         });
 
         grid.appendChild(cell);
@@ -2374,7 +2719,187 @@
       return out;
     }
 
-    function buildDiaryCard(dateKey, bodyText, senses) {
+    // ---------- Diary tab month state (#010) ----------
+    const diaryState = {
+      year: new Date().getFullYear(),
+      month: new Date().getMonth()
+    };
+
+    function diaryMonthKey() {
+      return `${diaryState.year}-${String(diaryState.month + 1).padStart(2, '0')}`;
+    }
+    function isDiaryThisMonth() {
+      const t = new Date();
+      return t.getFullYear() === diaryState.year && t.getMonth() === diaryState.month;
+    }
+    function isDiaryFutureMonth(y, m) {
+      const t = new Date();
+      if (y > t.getFullYear()) return true;
+      if (y === t.getFullYear() && m > t.getMonth()) return true;
+      return false;
+    }
+    function formatDiaryMonthLabel() {
+      return `${diaryState.year}년 ${diaryState.month + 1}월`;
+    }
+    function updateDiaryMonthHeader() {
+      const label = document.getElementById('diary-month-label');
+      if (label) label.textContent = formatDiaryMonthLabel();
+      const nextBtn = document.getElementById('diary-month-next');
+      if (nextBtn) {
+        let ny = diaryState.year, nm = diaryState.month + 1;
+        if (nm > 11) { nm = 0; ny++; }
+        nextBtn.classList.toggle('is-disabled', isDiaryFutureMonth(ny, nm));
+      }
+    }
+
+    // ---------- Diary photo carousel (#008) ----------
+    function buildDiaryPhotoCarousel(photoBlobs) {
+      const carousel = document.createElement('div');
+      carousel.className = 'diary-photo-carousel';
+
+      const track = document.createElement('div');
+      track.className = 'diary-photo-track';
+      photoBlobs.forEach(blob => {
+        const slide = document.createElement('div');
+        slide.className = 'diary-photo-slide';
+        const url = URL.createObjectURL(blob);
+        feedBlobUrls.push(url);
+        slide.style.backgroundImage = `url("${url}")`;
+        track.appendChild(slide);
+      });
+      carousel.appendChild(track);
+
+      const dots = document.createElement('div');
+      dots.className = 'diary-photo-dots';
+      if (photoBlobs.length <= 1) dots.classList.add('is-single');
+      photoBlobs.forEach((_, i) => {
+        const d = document.createElement('span');
+        d.className = 'diary-photo-dot' + (i === 0 ? ' is-current' : '');
+        dots.appendChild(d);
+      });
+      carousel.appendChild(dots);
+
+      let idx = 0;
+      let s = null;
+
+      function setIndex(newIdx) {
+        idx = Math.max(0, Math.min(photoBlobs.length - 1, newIdx));
+        track.style.transform = `translateX(${-idx * 100}%)`;
+        dots.querySelectorAll('.diary-photo-dot').forEach((d, i) => {
+          d.classList.toggle('is-current', i === idx);
+        });
+      }
+      function start(x, y) { s = { x, y, t: Date.now(), drag: false }; }
+      function move(x, y) {
+        if (!s) return;
+        const dx = x - s.x;
+        const dy = y - s.y;
+        if (!s.drag && Math.abs(dy) > Math.abs(dx)) return;
+        s.drag = true;
+        track.style.transition = 'none';
+        track.style.transform = `translateX(calc(${-idx * 100}% + ${dx}px))`;
+      }
+      function end(x) {
+        if (!s) return;
+        track.style.transition = '';
+        if (!s.drag) { s = null; return; }
+        const dx = x - s.x;
+        const dt = Math.max(1, Date.now() - s.t);
+        const v = Math.abs(dx) / dt;
+        const pass = Math.abs(dx) >= 60 || v >= 0.4;
+        if (pass) setIndex(idx + (dx < 0 ? 1 : -1));
+        else setIndex(idx);
+        s = null;
+      }
+
+      carousel.addEventListener('touchstart', e => {
+        const t = e.touches[0]; start(t.clientX, t.clientY);
+      }, { passive: true });
+      carousel.addEventListener('touchmove', e => {
+        const t = e.touches[0]; move(t.clientX, t.clientY);
+      }, { passive: true });
+      carousel.addEventListener('touchend', e => {
+        const t = e.changedTouches[0]; end(t ? t.clientX : 0);
+      }, { passive: true });
+
+      return carousel;
+    }
+
+    // ---------- Diary card swipe-to-delete (#009) ----------
+    function attachDiaryCardSwipe(wrap, card) {
+      let s = null;
+      function start(x, y) { s = { x, y, t: Date.now(), drag: false }; }
+      function move(x, y) {
+        if (!s) return;
+        const dx = x - s.x;
+        const dy = y - s.y;
+        if (!s.drag && Math.abs(dy) > Math.abs(dx)) return;
+        s.drag = true;
+        const clamped = Math.max(-120, Math.min(20, dx));
+        card.style.transition = 'none';
+        card.style.transform = `translateX(${clamped}px)`;
+      }
+      function end(x) {
+        if (!s) return;
+        card.style.transition = '';
+        if (!s.drag) { s = null; return; }
+        const dx = x - s.x;
+        const dt = Math.max(1, Date.now() - s.t);
+        const v = dx / dt;
+        const pass = (dx <= -60) || (v <= -0.4);
+        card.style.transform = '';
+        if (pass) {
+          // Close any other open card (한 번에 한 카드만 노출)
+          document.querySelectorAll('.diary-card.is-revealed').forEach(c => {
+            if (c !== card) c.classList.remove('is-revealed');
+          });
+          card.classList.add('is-revealed');
+        } else {
+          card.classList.remove('is-revealed');
+        }
+        s = null;
+      }
+
+      card.addEventListener('touchstart', e => {
+        // don't intercept touches that begin inside the photo carousel
+        if (e.target.closest('.diary-photo-carousel')) return;
+        const t = e.touches[0]; start(t.clientX, t.clientY);
+      }, { passive: true });
+      card.addEventListener('touchmove', e => {
+        const t = e.touches[0]; move(t.clientX, t.clientY);
+      }, { passive: true });
+      card.addEventListener('touchend', e => {
+        const t = e.changedTouches[0]; end(t ? t.clientX : 0);
+      }, { passive: true });
+    }
+
+    // ---------- Build one diary entry (wrap + trash + card) ----------
+    function buildDiaryEntry(dateKey, bodyText, senses, dayEntries, options) {
+      options = options || {};
+      const wrap = document.createElement('div');
+      wrap.className = 'diary-card-wrap';
+      wrap.dataset.dateKey = dateKey;
+      wrap.style.maxHeight = '2000px';
+
+      // Trash on RIGHT (우→좌 swipe, iOS 표준)
+      const trash = document.createElement('button');
+      trash.type = 'button';
+      trash.className = 'diary-trash';
+      trash.setAttribute('aria-label', '일기 삭제');
+      trash.textContent = '🗑';
+      trash.addEventListener('click', e => {
+        e.stopPropagation();
+        wrap.style.maxHeight = wrap.offsetHeight + 'px';
+        void wrap.offsetWidth;
+        wrap.classList.add('collapsing');
+        setTimeout(async () => {
+          await deleteDiary(dateKey);
+          await renderDiaryTab();
+        }, 320);
+      });
+      wrap.appendChild(trash);
+
+      // Card
       const card = document.createElement('article');
       card.className = 'diary-card';
 
@@ -2387,78 +2912,140 @@
 
       const dots = document.createElement('span');
       dots.className = 'diary-senses';
-      senses.forEach(s => {
+      (senses || []).forEach(s => {
         const dot = document.createElement('span');
         dot.className = 'picked-dot ' + s;
         dots.appendChild(dot);
       });
       head.appendChild(dots);
-
       card.appendChild(head);
+
+      // Photo carousel — entries that day's photoBlobs
+      const photoBlobs = (dayEntries || []).map(e => e.photoBlob).filter(Boolean);
+      if (photoBlobs.length > 0) {
+        card.appendChild(buildDiaryPhotoCarousel(photoBlobs));
+      }
 
       const body = document.createElement('p');
       body.className = 'diary-body';
       body.textContent = bodyText;
       card.appendChild(body);
 
-      return card;
-    }
-
-    async function renderDiaryTab() {
-      const feed = document.getElementById('diary-feed');
-      feed.innerHTML = '';
-
-      const entries  = await getAllEntries();
-      const diaries  = await getAllDiaries();
-      const byDay    = groupEntriesByDay(entries);
-      const diaryMap = new Map(diaries.map(d => [d.dateKey, d]));
-
-      const today = todayDateKey();
-      const todayEntries = byDay.get(today) || [];
-      const todayDiary   = diaryMap.get(today);
-
-      // --- Today slot ---
-      if (todayEntries.length === 0 && !todayDiary) {
-        const empty = document.createElement('div');
-        empty.className = 'diary-empty';
-        empty.innerHTML = '오늘은 아직 기록이 없어요.<br>홈에서 감각을 남기고 다시 와주세요.';
-        feed.appendChild(empty);
-      } else if (todayDiary) {
-        const senses = distinctSensesForDay(todayEntries);
-        const card = buildDiaryCard(today, todayDiary.text, senses);
+      if (options.allowRewrite) {
         const rewrite = document.createElement('button');
         rewrite.type = 'button';
         rewrite.className = 'diary-rewrite';
         rewrite.textContent = '다시 쓰기';
         rewrite.addEventListener('click', () => rewriteTodayDiary());
         card.appendChild(rewrite);
-        feed.appendChild(card);
-      } else {
-        const action = document.createElement('div');
-        action.className = 'diary-today-action';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-primary';
-        btn.id = 'btn-generate-today';
-        btn.textContent = '오늘 일기 쓰기';
-        btn.addEventListener('click', () => generateTodayDiary());
-        action.appendChild(btn);
-        const hint = document.createElement('div');
-        hint.className = 'diary-today-hint';
-        hint.textContent = `오늘 감각 ${todayEntries.length}개를 모아 일기로 묶어요`;
-        action.appendChild(hint);
-        feed.appendChild(action);
       }
 
-      // --- Past diaries (newest first, excluding today) ---
+      wrap.appendChild(card);
+      attachDiaryCardSwipe(wrap, card);
+
+      return wrap;
+    }
+
+    async function renderDiaryTab() {
+      const feed = document.getElementById('diary-feed');
+      feed.innerHTML = '';
+      freeFeedBlobUrls();
+      updateDiaryMonthHeader();
+
+      const entries  = await getAllEntries();
+      const diaries  = await getAllDiaries();
+      const byDay    = groupEntriesByDay(entries);
+      const diaryMap = new Map(diaries.map(d => [d.dateKey, d]));
+
+      const monthPrefix = diaryMonthKey() + '-';   // 'YYYY-MM-'
+      const today        = todayDateKey();
+      const todayEntries = byDay.get(today) || [];
+      const todayDiary   = diaryMap.get(today);
+      const thisMonth    = isDiaryThisMonth();
+
+      // --- Today slot — only when 이번 달 ---
+      if (thisMonth) {
+        if (todayEntries.length === 0 && !todayDiary) {
+          const empty = document.createElement('div');
+          empty.className = 'diary-empty';
+          empty.innerHTML = '오늘은 아직 기록이 없어요.<br>홈에서 감각을 남기고 다시 와주세요.';
+          feed.appendChild(empty);
+        } else if (todayDiary) {
+          feed.appendChild(buildDiaryEntry(
+            today, todayDiary.text,
+            distinctSensesForDay(todayEntries),
+            todayEntries,
+            { allowRewrite: true }
+          ));
+        } else {
+          const action = document.createElement('div');
+          action.className = 'diary-today-action';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-primary';
+          btn.id = 'btn-generate-today';
+          btn.textContent = '오늘 일기 쓰기';
+          btn.addEventListener('click', () => generateTodayDiary());
+          action.appendChild(btn);
+          const hint = document.createElement('div');
+          hint.className = 'diary-today-hint';
+          hint.textContent = `오늘 감각 ${todayEntries.length}개를 모아 일기로 묶어요`;
+          action.appendChild(hint);
+          feed.appendChild(action);
+        }
+      }
+
+      // --- Past diaries this month (excluding today if 이번 달) ---
       const pastKeys = diaries
         .map(d => d.dateKey)
-        .filter(k => k !== today)
+        .filter(k => k.startsWith(monthPrefix))
+        .filter(k => !thisMonth || k !== today)
         .sort((a, b) => b.localeCompare(a));
+
+      if (!thisMonth && pastKeys.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'diary-empty-month';
+        empty.textContent = '이 달엔 일기가 없어요';
+        feed.appendChild(empty);
+        return;
+      }
+
       pastKeys.forEach(k => {
-        const diary = diaryMap.get(k);
-        const senses = distinctSensesForDay(byDay.get(k) || []);
-        feed.appendChild(buildDiaryCard(k, diary.text, senses));
+        const dEntries = byDay.get(k) || [];
+        const sens = distinctSensesForDay(dEntries);
+        feed.appendChild(buildDiaryEntry(k, diaryMap.get(k).text, sens, dEntries, {}));
+      });
+    }
+
+    // ---------- Diary month navigation slide (#010) ----------
+    function goDiaryMonth(delta) {
+      let m = diaryState.month + delta;
+      let y = diaryState.year;
+      while (m < 0)  { m += 12; y--; }
+      while (m > 11) { m -= 12; y++; }
+      if (delta > 0 && isDiaryFutureMonth(y, m)) return;
+
+      const slide = document.getElementById('diary-month-slide');
+      const dir = delta > 0 ? 'next' : 'prev';
+      const exitClass  = dir === 'next' ? 'exit-to-left'    : 'exit-to-right';
+      const enterClass = dir === 'next' ? 'enter-from-right' : 'enter-from-left';
+
+      slide.classList.add(exitClass);
+      slide.addEventListener('transitionend', async function onEnd(ev) {
+        if (ev.propertyName !== 'transform') return;
+        slide.removeEventListener('transitionend', onEnd);
+
+        slide.style.transition = 'none';
+        slide.classList.remove(exitClass);
+        slide.classList.add(enterClass);
+
+        diaryState.year = y;
+        diaryState.month = m;
+        await renderDiaryTab();
+
+        void slide.offsetWidth;
+        slide.style.transition = '';
+        slide.classList.remove(enterClass);
       });
     }
 
@@ -2778,6 +3365,101 @@
         if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
         if (dx > 0) goPrevMonth();
         else        goNextMonth();
+      }, { passive: true });
+
+      // Flow tab: date arrows (#002)
+      document.getElementById('flow-prev').addEventListener('click', () => flowDateStep(-1));
+      document.getElementById('flow-next').addEventListener('click', () => flowDateStep(+1));
+
+      // Flow tab: horizontal swipe (touch) — left=next day, right=prev day
+      // Threshold: |dx| >= 60px OR velocity >= 0.4px/ms. Vertical-dominant motion ignored.
+      const flowViewEl  = document.getElementById('flow-view');
+      const flowSlideEl = document.getElementById('flow-slide');
+      let flowSwipe = null;
+
+      function flowSwipeStart(x, y) {
+        flowSwipe = { x, y, t: Date.now(), dragging: false };
+      }
+      function flowSwipeMove(x, y) {
+        if (!flowSwipe) return;
+        const dx = x - flowSwipe.x;
+        const dy = y - flowSwipe.y;
+        if (!flowSwipe.dragging && Math.abs(dy) > Math.abs(dx)) return;  // 세로 우세 → 무시
+        flowSwipe.dragging = true;
+        flowSlideEl.style.transition = 'none';
+        flowSlideEl.style.transform = `translateX(${dx}px)`;
+        flowSlideEl.style.opacity = String(Math.max(0.6, 1 - Math.abs(dx) / 300));
+      }
+      function flowSwipeEnd(x) {
+        if (!flowSwipe) return;
+        flowSlideEl.style.transition = '';
+
+        if (!flowSwipe.dragging) {
+          flowSwipe = null;
+          return;
+        }
+
+        const dx = x - flowSwipe.x;
+        const dt = Math.max(1, Date.now() - flowSwipe.t);
+        const velocity = Math.abs(dx) / dt;
+        const passDistance = Math.abs(dx) >= 60;
+        const passVelocity = velocity >= 0.4;
+
+        // clear inline transform so animation class can take over
+        flowSlideEl.style.transform = '';
+        flowSlideEl.style.opacity = '';
+
+        if (passDistance || passVelocity) {
+          const dir = dx < 0 ? 'next' : 'prev';
+          const next = new Date(flowState.date);
+          next.setDate(next.getDate() + (dir === 'next' ? 1 : -1));
+          const todayEnd = new Date();
+          todayEnd.setHours(23, 59, 59, 999);
+          if (dir === 'next' && next > todayEnd) {
+            // future blocked — bounce-back already done by clearing transform
+          } else {
+            goToFlowDate(next, dir);
+          }
+        }
+        flowSwipe = null;
+      }
+
+      flowViewEl.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        flowSwipeStart(t.clientX, t.clientY);
+      }, { passive: true });
+      flowViewEl.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        flowSwipeMove(t.clientX, t.clientY);
+      }, { passive: true });
+      flowViewEl.addEventListener('touchend', e => {
+        const t = e.changedTouches[0];
+        flowSwipeEnd(t ? t.clientX : (flowSwipe ? flowSwipe.x : 0));
+      }, { passive: true });
+
+      // Diary tab: month arrows (#010)
+      document.getElementById('diary-month-prev').addEventListener('click', () => goDiaryMonth(-1));
+      document.getElementById('diary-month-next').addEventListener('click', () => goDiaryMonth(+1));
+
+      // Diary tab: month-header swipe (헤더 영역만 — 카드/캐러셀 스와이프와 분리)
+      const diaryMonthHeader = document.querySelector('.diary-month-header');
+      let diaryMonthSwipe = null;
+      diaryMonthHeader.addEventListener('touchstart', e => {
+        if (e.target.closest('.diary-arrow')) return;
+        const t = e.touches[0];
+        diaryMonthSwipe = { x: t.clientX, y: t.clientY, ts: Date.now() };
+      }, { passive: true });
+      diaryMonthHeader.addEventListener('touchend', e => {
+        if (!diaryMonthSwipe) return;
+        const t = e.changedTouches[0];
+        const dx = (t ? t.clientX : diaryMonthSwipe.x) - diaryMonthSwipe.x;
+        const dy = (t ? t.clientY : diaryMonthSwipe.y) - diaryMonthSwipe.y;
+        const dt = Math.max(1, Date.now() - diaryMonthSwipe.ts);
+        diaryMonthSwipe = null;
+        if (Math.abs(dy) > Math.abs(dx)) return;
+        if (Math.abs(dx) >= 60 || Math.abs(dx) / dt >= 0.4) {
+          goDiaryMonth(dx < 0 ? +1 : -1);
+        }
       }, { passive: true });
 
       // Settings modal
