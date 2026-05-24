@@ -2692,15 +2692,6 @@
       // 확인 버튼
       document.getElementById('sense-picker-confirm').addEventListener('click', closeSensePicker);
 
-      // dim된 본문 탭 → 닫기 (capture 단계에서 잡아 photo 버튼·text input보다 먼저 처리)
-      document.getElementById('input-body').addEventListener('click', (e) => {
-        if (isSensePickerOpen()) {
-          e.preventDefault();
-          e.stopPropagation();
-          closeSensePicker();
-        }
-      }, true);
-
       // Input → Home
       document.getElementById('btn-back').addEventListener('click', () => {
         showView('home');
