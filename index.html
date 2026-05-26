@@ -2242,42 +2242,15 @@
 
     <!-- Settings modal -->
     <div class="settings-overlay" id="settings-overlay" hidden>
-      <div class="settings-modal" id="settings-modal" data-stage="idle" role="dialog" aria-label="AI 설정">
+      <div class="settings-modal" id="settings-modal" data-stage="idle" role="dialog" aria-label="데이터 백업">
 
-        <!-- Stage: idle (AI 설정 + 데이터 백업) -->
-        <!-- #029 Vercel 이전: API 키는 서버 환경변수 관리. 입력 UI는 시각적으로 숨김(hidden) — -->
-        <!-- 기존 함수(saveApiKey·clearApiKey·openSettingsModal의 input 참조)·init 리스너는 -->
-        <!-- 회귀 방지 위해 그대로 유지. hidden 상태라 동작 영향 0건. -->
+        <!-- Stage: idle (데이터 백업) -->
+        <!-- #034 — AI 설정 영역 통째 제거. 키는 서버 환경변수(GEMINI_API_KEY)에서만 관리. -->
+        <!-- 클라이언트는 /api/summarize 프록시만 호출 — 설정 모달은 데이터 백업 단독 영역. -->
         <div class="settings-stage-idle">
-          <h3 class="settings-title">AI 설정</h3>
-
-          <!-- 안내 — 사용자 입력 부담 0건 한지 톤으로 박제 -->
-          <span class="settings-label">감각 회로</span>
-          <p class="settings-section-hint">감각을 잇는 회로는 이미 켜져 있어요.</p>
-
-          <!-- 기존 입력 UI — hidden, 회귀 방지 흔적만 -->
-          <label class="settings-label" for="settings-key" hidden>Gemini API 키</label>
-          <input
-            class="settings-input"
-            id="settings-key"
-            type="password"
-            placeholder="키를 붙여넣어 주세요"
-            autocomplete="off"
-            spellcheck="false"
-            hidden
-          >
-          <a class="settings-link" id="settings-help"
-             href="https://aistudio.google.com/app/apikey"
-             target="_blank" rel="noopener" hidden>키 발급받는 법 ›</a>
-          <div class="settings-actions" hidden>
-            <button class="settings-btn-ghost" id="settings-clear" type="button">지우기</button>
-            <button class="settings-btn-primary" id="settings-save" type="button">저장</button>
-          </div>
-
-          <hr class="settings-divider">
+          <h3 class="settings-title">데이터 백업</h3>
 
           <div class="settings-section">
-            <span class="settings-label">데이터 백업</span>
             <p class="settings-section-hint">폰을 바꾸거나 주소가 옮겨질 때, 일기를 옮겨 담을 수 있어요.</p>
             <div class="settings-actions">
               <button class="settings-btn-ghost" id="backup-import" type="button">가져오기</button>
@@ -2529,15 +2502,13 @@
     // 함수 엔드포인트: /api/summarize — 같은 origin(상대 경로)이라 CORS preflight 없음.
     const SUMMARIZE_ENDPOINT = '/api/summarize';
 
-    // 서버가 키를 관리하므로 클라이언트 측 키 존재 여부 가드는 항상 통과.
-    // 기존 호출부 두 곳(라인 약 3697 일기 생성 가드, 라인 약 3792 month summary silent skip)
-    // 시그니처 호환 — truthy placeholder 반환. localStorage 의존 0건.
-    function getApiKey() {
-      return 'server-managed';
-    }
+    // #034 — getApiKey() 함수 통째 제거. 호출부 두 곳(일기 생성 가드·month summary silent skip)도
+    // 함께 정리 — 키는 항상 서버에서 관리되므로 클라이언트 가드 자체가 의미 없음.
 
-    // callGemini — 시그니처 유지(systemText, userText) / 에러 분류 7종 유지
-    // (NO_KEY·NETWORK·RATE_LIMIT·AUTH·HTTP·EMPTY·PARSE).
+    // callGemini — 시그니처 유지(systemText, userText) / 에러 분류 6종 유지
+    // (NETWORK·RATE_LIMIT·AUTH·HTTP·EMPTY·PARSE) + 서버 측 신규 2종(BAD_REQUEST·FORBIDDEN_ORIGIN).
+    // #034: NO_KEY는 클라이언트 케이스 자체가 사라짐 — 키 입력 UI 통째 제거. 서버 키 미설정은
+    // 솔라 환경변수 누락 케이스라 평소엔 발생 0이며, 발생 시 서버가 다른 분류(AUTH 등)로 전파.
     // 서버 응답 4xx/5xx에 { error: { code, message } } 포함되면 그 code를 그대로 전파.
     async function callGemini(systemText, userText) {
       const body = { systemText, userText };
@@ -2568,7 +2539,9 @@
 
         const e = new Error(serverMsg || `HTTP ${res.status}`);
         // 서버가 분류한 code를 우선 신뢰. 클라이언트 분류와 동일 어휘.
-        if (serverCode === 'NO_KEY' || serverCode === 'AUTH' || serverCode === 'RATE_LIMIT' ||
+        // #034: 'NO_KEY' 클라이언트 분기 제거 — 그러나 만약 서버가 NO_KEY로 전파해도
+        // 안전하게 'HTTP' fallback 으로 흡수되도록 화이트리스트에서 NO_KEY 제외.
+        if (serverCode === 'AUTH' || serverCode === 'RATE_LIMIT' ||
             serverCode === 'EMPTY'  || serverCode === 'PARSE' || serverCode === 'NETWORK' ||
             serverCode === 'HTTP'   || serverCode === 'BAD_REQUEST' ||
             serverCode === 'FORBIDDEN_ORIGIN') {
@@ -2602,8 +2575,8 @@
 
     function geminiErrorMessage(err) {
       switch (err && err.code) {
-        // 서버 측 키 미설정(환경변수 누락) — 솔라가 비서팀에 전달 필요한 케이스.
-        case 'NO_KEY':     return '서버 설정 점검이 필요해요. 잠시 후 다시 시도해주세요.';
+        // #034: NO_KEY 케이스 제거 — 클라이언트가 키를 가지지 않음. 서버 키 미설정은
+        // 서버 측 분류로 전파되며 'HTTP' fallback 으로 흡수됨.
         case 'NETWORK':    return '연결이 잠시 끊겼어요. 다시 시도해주세요.';
         case 'RATE_LIMIT': return '오늘 무료 한도가 다 찼어요. 내일 다시 시도해주세요.';
         case 'AUTH':       return '서버 키 점검이 필요해요. 잠시 후 다시 시도해주세요.';
@@ -2632,33 +2605,14 @@
     }
 
     // ---------- Settings modal ----------
+    // #034 — saveApiKey·clearApiKey 함수 + getApiKey 함수 통째 제거.
+    // 키는 서버 환경변수(GEMINI_API_KEY)에서만 관리. 설정 모달은 데이터 백업 단독 영역.
     function openSettingsModal() {
-      const overlay = document.getElementById('settings-overlay');
-      const input   = document.getElementById('settings-key');
-      input.value = localStorage.getItem('geminiApiKey') || '';
-      overlay.hidden = false;
-      setTimeout(() => input.focus(), 50);
+      document.getElementById('settings-overlay').hidden = false;
     }
 
     function closeSettingsModal() {
       document.getElementById('settings-overlay').hidden = true;
-    }
-
-    function saveApiKey() {
-      const val = document.getElementById('settings-key').value.trim();
-      if (val) {
-        localStorage.setItem('geminiApiKey', val);
-      } else {
-        localStorage.removeItem('geminiApiKey');
-      }
-      closeSettingsModal();
-    }
-
-    function clearApiKey() {
-      if (!confirm('저장된 API 키를 지울까요?')) return;
-      localStorage.removeItem('geminiApiKey');
-      document.getElementById('settings-key').value = '';
-      closeSettingsModal();
     }
 
     function startOfTodayMs() {
@@ -3695,10 +3649,7 @@
         return;
       }
 
-      if (!getApiKey()) {
-        openSettingsModal();
-        return;
-      }
+      // #034 — getApiKey() 가드 제거. 키는 항상 서버에서 관리되므로 클라이언트 가드 무의미.
 
       const fp = await fingerprintEntries(dayEntries);
       if (!force) {
@@ -3733,13 +3684,13 @@
         }
       } catch (err) {
         // 사용자 액션 가능한 케이스(NETWORK·RATE_LIMIT)는 한국어 메시지만.
-        // 서버 측 케이스(NO_KEY·AUTH·FORBIDDEN_ORIGIN·BAD_REQUEST)와 비정상 응답·미지 에러는
+        // 서버 측 케이스(AUTH·FORBIDDEN_ORIGIN·BAD_REQUEST)와 비정상 응답·미지 에러는
         // 진단 부록 첨부해서 솔라/비서팀에 그대로 전달 가능하게.
+        // #034 — NO_KEY 분기 제거. 키는 서버 관리, 클라이언트 가드 무의미.
         const baseMsg = geminiErrorMessage(err);
         const friendly = err && ['NETWORK','RATE_LIMIT'].indexOf(err.code) !== -1;
         alert(baseMsg + (friendly ? '' : geminiDiagAppendix(err)));
         if (btn) { btn.disabled = false; btn.textContent = idleLabel; }
-        // #029 이후 NO_KEY는 서버 환경변수 누락 케이스라 설정 모달 자동 노출 의미 없음.
       }
     }
 
@@ -3791,7 +3742,7 @@
 
     async function ensureMonthSummary(year, monthIdx, monthEntries) {
       if (monthEntries.length === 0) return null;
-      if (!getApiKey()) return null;  // Silent skip for background call
+      // #034 — getApiKey() silent skip 제거. 서버 측 키 누락은 callGemini 에러로 전파.
 
       const mk = monthKeyOf(year, monthIdx);
       const fp = await fingerprintEntries(monthEntries);
@@ -4612,8 +4563,7 @@
         setSettingsStage('idle');
         closeSettingsModal();
       });
-      document.getElementById('settings-save').addEventListener('click', saveApiKey);
-      document.getElementById('settings-clear').addEventListener('click', clearApiKey);
+      // #034 — settings-save·settings-clear 리스너 제거 (요소 자체 사라짐).
       document.getElementById('settings-overlay').addEventListener('click', e => {
         if (e.target.id !== 'settings-overlay') return;
         const stage = document.getElementById('settings-modal').dataset.stage;
