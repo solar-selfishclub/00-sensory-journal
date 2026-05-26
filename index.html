@@ -1176,6 +1176,375 @@
     }
     .settings-close:active { color: #5C4631; }
 
+    /* ===================================================== */
+    /* Backup section (inside Settings modal) — #027          */
+    /* ===================================================== */
+
+    /* Stage toggle inside the settings modal */
+    .settings-modal[data-stage="exporting"] .settings-stage-idle,
+    .settings-modal[data-stage="exporting"] .settings-stage-done,
+    .settings-modal[data-stage="done"]      .settings-stage-idle,
+    .settings-modal[data-stage="done"]      .settings-stage-exporting,
+    .settings-modal:not([data-stage="exporting"]) .settings-stage-exporting,
+    .settings-modal:not([data-stage="done"])      .settings-stage-done {
+      display: none;
+    }
+
+    /* While exporting, soften the close button (prevents interruption) */
+    .settings-modal[data-stage="exporting"] .settings-close {
+      pointer-events: none;
+      opacity: 0.3;
+    }
+
+    /* Fade divider between API-key area and backup section */
+    .settings-divider {
+      height: 1px;
+      margin: 18px 0;
+      background: linear-gradient(
+        to right,
+        rgba(92, 70, 49, 0) 0%,
+        rgba(92, 70, 49, 0.14) 50%,
+        rgba(92, 70, 49, 0) 100%
+      );
+      border: 0;
+    }
+
+    .settings-section { /* flow only */ }
+
+    .settings-section-hint {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #9C8770;
+      letter-spacing: 0.3px;
+      line-height: 1.55;
+      margin: 2px 0 12px;
+    }
+
+    /* Soft button — between primary and ghost */
+    .settings-btn-soft {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      padding: 9px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.2s ease;
+      color: #5C4631;
+      background: #FDFAF3;
+      border: 1px solid rgba(92, 70, 49, 0.16);
+    }
+    .settings-btn-soft:active { transform: scale(0.97); }
+
+    /* Export progress (in-modal area swap) */
+    .export-progress {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0 4px;
+    }
+    .export-progress-msg {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #5C4631;
+      letter-spacing: 0.5px;
+    }
+    .export-progress-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .export-progress-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #9C8770;
+      opacity: 0.3;
+      animation: export-breath 1200ms ease-in-out infinite alternate;
+    }
+    .export-progress-dot:nth-child(2) { animation-delay: 200ms; }
+    .export-progress-dot:nth-child(3) { animation-delay: 400ms; }
+    @keyframes export-breath {
+      from { opacity: 0.3; }
+      to   { opacity: 1.0; }
+    }
+
+    /* Export done state */
+    .export-done {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0 0;
+    }
+    .export-done-msg {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      color: #5C4631;
+      letter-spacing: 0.5px;
+    }
+    .export-done-sub {
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 12px;
+      color: #9C8770;
+      letter-spacing: 0.2px;
+      line-height: 1.55;
+      text-align: center;
+    }
+    .export-done-sub .filename {
+      background: rgba(92, 70, 49, 0.06);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #5C4631;
+    }
+    .export-done-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ===================================================== */
+    /* Conflict modals — bulk / entry / diary                 */
+    /* ===================================================== */
+
+    .conflict-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(250, 248, 242, 0.86);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 110;
+      padding: 20px;
+      backdrop-filter: blur(2px);
+    }
+    .conflict-overlay[hidden] { display: none; }
+
+    .conflict-modal {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.18);
+      border-radius: 10px;
+      padding: 26px 24px 22px;
+      box-shadow:
+        0 2px 6px rgba(92, 70, 49, 0.08),
+        0 10px 30px rgba(92, 70, 49, 0.10);
+    }
+
+    /* Stage toggle inside conflict modal */
+    .conflict-modal[data-stage="bulk"]  .conflict-stage-entry,
+    .conflict-modal[data-stage="bulk"]  .conflict-stage-diary,
+    .conflict-modal[data-stage="entry"] .conflict-stage-bulk,
+    .conflict-modal[data-stage="entry"] .conflict-stage-diary,
+    .conflict-modal[data-stage="diary"] .conflict-stage-bulk,
+    .conflict-modal[data-stage="diary"] .conflict-stage-entry {
+      display: none;
+    }
+
+    .conflict-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 17px;
+      color: #5C4631;
+      margin: 0 0 6px;
+      letter-spacing: 0.6px;
+    }
+    .conflict-summary {
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 13px;
+      color: #5C4631;
+      line-height: 1.6;
+      letter-spacing: 0.1px;
+      margin: 0 0 6px;
+    }
+    .conflict-summary-detail {
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 12px;
+      color: #9C8770;
+      line-height: 1.55;
+      margin: 0 0 18px;
+    }
+
+    /* "나중에 하기" text link (bulk stage only) */
+    .conflict-later {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #9C8770;
+      letter-spacing: 0.5px;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      padding: 4px 2px;
+    }
+    .conflict-later:active { color: #5C4631; }
+
+    /* Progress counter (entry/diary stages, upper-right) */
+    .conflict-counter {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #9C8770;
+      letter-spacing: 0.8px;
+      position: absolute;
+      top: 16px;
+      right: 22px;
+    }
+
+    /* Meta line (date · senses) */
+    .conflict-meta {
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 12px;
+      color: #9C8770;
+      line-height: 1.55;
+      margin: 0 0 10px;
+    }
+
+    /* Bulk stage 3-button vertical stack */
+    .conflict-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .conflict-actions > button {
+      width: 100%;
+      padding: 11px 18px;
+      font-size: 14px;
+      border-radius: 999px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .conflict-actions > button:active { transform: scale(0.97); }
+
+    /* Entry compare cards (sense-record one-by-one) */
+    .entry-compare {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+    .entry-compare-card {
+      background: #FCF9F2;
+      border: 1px solid rgba(92, 70, 49, 0.14);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .entry-compare-source {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 11px;
+      color: #9C8770;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .entry-compare-text {
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 14px;
+      color: #5C4631;
+      line-height: 1.55;
+      letter-spacing: 0.1px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .entry-compare-senses {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 11px;
+      color: #9C8770;
+      letter-spacing: 0.5px;
+      margin-top: 6px;
+    }
+    .entry-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .entry-actions > button {
+      flex: 1;
+      padding: 11px 8px;
+      font-size: 13px;
+      border-radius: 999px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      letter-spacing: 0.6px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .entry-actions > button:active { transform: scale(0.97); }
+
+    /* Diary compare cards (one-by-one — top/bottom stacked) */
+    .diary-compare {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 14px 0 18px;
+    }
+    .diary-compare-card {
+      background: #FCF9F2;
+      border: 1px solid rgba(92, 70, 49, 0.14);
+      border-radius: 8px;
+      padding: 14px 16px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .diary-compare-source {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 11px;
+      color: #9C8770;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .diary-compare-text {
+      font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+      font-size: 14px;
+      color: #5C4631;
+      line-height: 1.7;
+      letter-spacing: 0.1px;
+      white-space: pre-wrap;
+    }
+    .diary-compare-divider {
+      height: 1px;
+      margin: 0;
+      background: linear-gradient(
+        to right,
+        rgba(92, 70, 49, 0) 0%,
+        rgba(92, 70, 49, 0.14) 50%,
+        rgba(92, 70, 49, 0) 100%
+      );
+      border: 0;
+    }
+    .diary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .diary-actions > button {
+      width: 100%;
+      padding: 11px 18px;
+      font-size: 14px;
+      border-radius: 999px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .diary-actions > button:active { transform: scale(0.97); }
+
+    /* Hidden file input for import */
+    .backup-file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
     /* Settings ⚙ button in Journal header */
     .btn-settings {
       position: absolute;
@@ -1873,25 +2242,134 @@
 
     <!-- Settings modal -->
     <div class="settings-overlay" id="settings-overlay" hidden>
-      <div class="settings-modal" role="dialog" aria-label="AI 설정">
-        <h3 class="settings-title">AI 설정</h3>
-        <label class="settings-label" for="settings-key">Gemini API 키</label>
-        <input
-          class="settings-input"
-          id="settings-key"
-          type="password"
-          placeholder="키를 붙여넣어 주세요"
-          autocomplete="off"
-          spellcheck="false"
-        >
-        <a class="settings-link" id="settings-help"
-           href="https://aistudio.google.com/app/apikey"
-           target="_blank" rel="noopener">키 발급받는 법 ›</a>
-        <div class="settings-actions">
-          <button class="settings-btn-ghost" id="settings-clear" type="button">지우기</button>
-          <button class="settings-btn-primary" id="settings-save" type="button">저장</button>
+      <div class="settings-modal" id="settings-modal" data-stage="idle" role="dialog" aria-label="AI 설정">
+
+        <!-- Stage: idle (AI 설정 + 데이터 백업) -->
+        <div class="settings-stage-idle">
+          <h3 class="settings-title">AI 설정</h3>
+          <label class="settings-label" for="settings-key">Gemini API 키</label>
+          <input
+            class="settings-input"
+            id="settings-key"
+            type="password"
+            placeholder="키를 붙여넣어 주세요"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <a class="settings-link" id="settings-help"
+             href="https://aistudio.google.com/app/apikey"
+             target="_blank" rel="noopener">키 발급받는 법 ›</a>
+          <div class="settings-actions">
+            <button class="settings-btn-ghost" id="settings-clear" type="button">지우기</button>
+            <button class="settings-btn-primary" id="settings-save" type="button">저장</button>
+          </div>
+
+          <hr class="settings-divider">
+
+          <div class="settings-section">
+            <span class="settings-label">데이터 백업</span>
+            <p class="settings-section-hint">폰을 바꾸거나 주소가 옮겨질 때, 일기를 옮겨 담을 수 있어요.</p>
+            <div class="settings-actions">
+              <button class="settings-btn-ghost" id="backup-import" type="button">가져오기</button>
+              <button class="settings-btn-primary" id="backup-export" type="button">내보내기</button>
+            </div>
+          </div>
         </div>
+
+        <!-- Stage: exporting (호흡 점) -->
+        <div class="settings-stage-exporting">
+          <div class="export-progress">
+            <div class="export-progress-msg" id="export-progress-msg">감각을 모으고 있어요</div>
+            <div class="export-progress-dots">
+              <span class="export-progress-dot"></span>
+              <span class="export-progress-dot"></span>
+              <span class="export-progress-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage: done (완료 + 파일명 강조 + 확인) -->
+        <div class="settings-stage-done">
+          <div class="export-done">
+            <div class="export-done-msg" id="export-done-msg">일기를 다 옮겨 담았어요</div>
+            <div class="export-done-sub" id="export-done-sub"></div>
+            <div class="export-done-actions">
+              <button class="settings-btn-primary" id="export-done-confirm" type="button">확인</button>
+            </div>
+          </div>
+        </div>
+
         <button class="settings-close" id="settings-close" type="button" aria-label="닫기">✕</button>
+      </div>
+    </div>
+
+    <!-- Hidden file input for backup import -->
+    <input type="file" id="backup-file-input" class="backup-file-input" accept="application/json,.json">
+
+    <!-- Conflict resolution modal (3 stages: bulk / entry / diary) -->
+    <div class="conflict-overlay" id="conflict-overlay" hidden>
+      <div class="conflict-modal" id="conflict-modal" data-stage="bulk" role="dialog" aria-label="겹치는 기록">
+
+        <!-- Stage: bulk -->
+        <div class="conflict-stage-bulk">
+          <button class="conflict-later" id="conflict-later" type="button">나중에 하기</button>
+          <h3 class="conflict-title">겹치는 기록이 있어요</h3>
+          <p class="conflict-summary" id="conflict-summary"></p>
+          <p class="conflict-summary-detail" id="conflict-summary-detail"></p>
+          <div class="conflict-actions">
+            <button class="settings-btn-primary" id="conflict-keep-backup" type="button">전부 백업 살리기</button>
+            <button class="settings-btn-soft"    id="conflict-keep-current" type="button">전부 현재 살리기</button>
+            <button class="settings-btn-ghost"   id="conflict-one-by-one" type="button">하나씩 보기</button>
+          </div>
+        </div>
+
+        <!-- Stage: entry (감각 기록 하나씩) -->
+        <div class="conflict-stage-entry">
+          <span class="conflict-counter" id="entry-counter">감각 기록 — 1 / 1</span>
+          <h3 class="conflict-title">같은 시각에 두 개가 있어요</h3>
+          <p class="conflict-meta" id="entry-meta"></p>
+          <div class="entry-compare">
+            <div class="entry-compare-card">
+              <div class="entry-compare-source">백업 파일 안</div>
+              <div class="entry-compare-text" id="entry-backup-text"></div>
+              <div class="entry-compare-senses" id="entry-backup-senses"></div>
+            </div>
+            <div class="entry-compare-card">
+              <div class="entry-compare-source">지금 폰 안</div>
+              <div class="entry-compare-text" id="entry-current-text"></div>
+              <div class="entry-compare-senses" id="entry-current-senses"></div>
+            </div>
+          </div>
+          <div class="entry-actions">
+            <button class="settings-btn-primary" id="entry-keep-backup" type="button">백업</button>
+            <button class="settings-btn-ghost"   id="entry-keep-current" type="button">현재</button>
+            <button class="settings-btn-soft"    id="entry-keep-both" type="button">둘 다 살리기</button>
+          </div>
+        </div>
+
+        <!-- Stage: diary (일기 하나씩 — 상하 배치) -->
+        <div class="conflict-stage-diary">
+          <span class="conflict-counter" id="diary-counter">일기 — 1 / 1</span>
+          <h3 class="conflict-title">같은 날 두 개의 일기가 있어요</h3>
+          <p class="conflict-meta" id="diary-meta"></p>
+          <div class="diary-compare">
+            <div class="diary-compare-card">
+              <div class="diary-compare-source">백업 파일 안</div>
+              <div class="diary-compare-text" id="diary-backup-text"></div>
+            </div>
+            <hr class="diary-compare-divider">
+            <div class="diary-compare-card">
+              <div class="diary-compare-source">지금 폰 안</div>
+              <div class="diary-compare-text" id="diary-current-text"></div>
+            </div>
+          </div>
+          <div class="diary-actions">
+            <button class="settings-btn-primary" id="diary-keep-top" type="button">위 일기 살리기</button>
+            <button class="settings-btn-primary" id="diary-keep-bottom" type="button">아래 일기 살리기</button>
+            <button class="settings-btn-soft"    id="diary-keep-both" type="button">둘 다 살리기</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -3390,6 +3868,500 @@
       showView('done');
     }
 
+    // ---------- Backup: export / import / conflict resolution ----------
+
+    const BACKUP_VERSION = 1;
+
+    // Read every store needed for backup. Photos live on entries as Blob; we serialize to base64.
+    async function getAllMonthSummaries() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_MONTH, 'readonly');
+        const req = tx.objectStore(STORE_MONTH).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    // Add an entry with arbitrary id (used for merge — id may already exist on backup file).
+    // Differs from addEntry() which uses .add() (would throw on duplicate id).
+    async function putEntryRaw(entry) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(entry);
+        tx.oncomplete = () => resolve();
+        tx.onerror    = () => reject(tx.error);
+      });
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result); // data:<mime>;base64,<...>
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function dataUrlToBlob(dataUrl) {
+      if (!dataUrl || typeof dataUrl !== 'string') return null;
+      const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
+      if (!match) return null;
+      const mime = match[1];
+      const b64  = match[2];
+      try {
+        const bin = atob(b64);
+        const len = bin.length;
+        const buf = new Uint8Array(len);
+        for (let i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
+        return new Blob([buf], { type: mime });
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function backupFilenameForToday() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `sensory-backup-${y}-${m}-${day}.json`;
+    }
+
+    // Conflict-key for a sense entry — timestamp truncated to the second.
+    // entry.id is ms-since-epoch (Date.now()), so /1000 floored gives a per-second bucket.
+    function entryConflictKey(entry) {
+      if (typeof entry.id === 'number' && isFinite(entry.id)) {
+        return String(Math.floor(entry.id / 1000));
+      }
+      // Fallback: derive from createdAt
+      if (entry.createdAt) {
+        const t = new Date(entry.createdAt).getTime();
+        if (isFinite(t)) return String(Math.floor(t / 1000));
+      }
+      return String(entry.id);
+    }
+
+    // ---------- Export ----------
+
+    function setSettingsStage(stage) {
+      const modal = document.getElementById('settings-modal');
+      if (modal) modal.dataset.stage = stage;
+    }
+
+    async function runExportBackup() {
+      setSettingsStage('exporting');
+      const msg = document.getElementById('export-progress-msg');
+      if (msg) msg.textContent = '감각을 모으고 있어요';
+
+      try {
+        const [entries, diaries, monthSummaries] = await Promise.all([
+          getAllEntries(),
+          getAllDiaries(),
+          getAllMonthSummaries()
+        ]);
+
+        // Serialize entries — photoBlob → photoDataUrl
+        const entriesOut = [];
+        for (const e of entries) {
+          const out = {
+            id: e.id,
+            createdAt: e.createdAt,
+            senses: Array.isArray(e.senses) ? e.senses.slice() : [],
+            text: e.text || ''
+          };
+          if (e.photoBlob) {
+            try {
+              out.photoDataUrl = await blobToBase64(e.photoBlob);
+            } catch (_) {
+              out.photoDataUrl = null;
+            }
+          } else {
+            out.photoDataUrl = null;
+          }
+          entriesOut.push(out);
+        }
+
+        const payload = {
+          schema: 'sensory-journal',
+          version: BACKUP_VERSION,
+          exportedAt: new Date().toISOString(),
+          entries: entriesOut,
+          diaries: diaries,
+          monthSummaries: monthSummaries
+        };
+
+        const filename = backupFilenameForToday();
+        const json = JSON.stringify(payload);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // Defer revoke so browser actually starts the download
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+        // Done stage
+        const sub = document.getElementById('export-done-sub');
+        if (sub) {
+          sub.innerHTML = '다운로드 폴더에 <span class="filename"></span> 으로 저장되었어요.';
+          sub.querySelector('.filename').textContent = filename;
+        }
+        const doneMsg = document.getElementById('export-done-msg');
+        if (doneMsg) doneMsg.textContent = '일기를 다 옮겨 담았어요';
+        setSettingsStage('done');
+      } catch (err) {
+        setSettingsStage('idle');
+        alert('내보내기에 실패했어요: ' + (err && err.message ? err.message : err));
+      }
+    }
+
+    // ---------- Import ----------
+
+    // Pending import context — survives across conflict modal stages.
+    let importCtx = null;
+
+    function resetImportCtx() {
+      importCtx = null;
+    }
+
+    async function startImportFlow() {
+      const input = document.getElementById('backup-file-input');
+      if (!input) return;
+      input.value = ''; // allow re-selecting the same file
+      input.click();
+    }
+
+    async function handleImportFileChosen(file) {
+      if (!file) return;
+      let parsed;
+      try {
+        const text = await file.text();
+        parsed = JSON.parse(text);
+      } catch (err) {
+        alert('백업 파일을 읽지 못했어요. JSON 형식이 맞는지 확인해 주세요.');
+        return;
+      }
+      if (!parsed || parsed.schema !== 'sensory-journal' || !Array.isArray(parsed.entries) || !Array.isArray(parsed.diaries)) {
+        alert('백업 파일 형식이 달라요. 감각 일기에서 내보낸 파일인지 확인해 주세요.');
+        return;
+      }
+
+      // Build the merge plan: classify entries / diaries / month summaries.
+      const [curEntries, curDiaries] = await Promise.all([getAllEntries(), getAllDiaries()]);
+      const curEntryByKey = new Map();
+      curEntries.forEach(e => curEntryByKey.set(entryConflictKey(e), e));
+      const curDiaryByKey = new Map();
+      curDiaries.forEach(d => curDiaryByKey.set(d.dateKey, d));
+
+      const entryAddDirect    = [];  // No conflict — put as-is
+      const diaryAddDirect    = [];
+      const entryConflicts    = [];  // [{ backup, current }]
+      const diaryConflicts    = [];
+
+      for (const be of parsed.entries) {
+        const k = entryConflictKey(be);
+        if (curEntryByKey.has(k)) {
+          entryConflicts.push({ backup: be, current: curEntryByKey.get(k) });
+        } else {
+          entryAddDirect.push(be);
+        }
+      }
+      for (const bd of parsed.diaries) {
+        if (!bd || !bd.dateKey) continue;
+        if (curDiaryByKey.has(bd.dateKey)) {
+          diaryConflicts.push({ backup: bd, current: curDiaryByKey.get(bd.dateKey) });
+        } else {
+          diaryAddDirect.push(bd);
+        }
+      }
+
+      // Month summaries — fingerprint-based cache, safe to overwrite (regenerable from entries).
+      const monthSummariesIn = Array.isArray(parsed.monthSummaries) ? parsed.monthSummaries : [];
+
+      importCtx = {
+        entryAddDirect,
+        diaryAddDirect,
+        entryConflicts,
+        diaryConflicts,
+        monthSummariesIn,
+        entryIdx: 0,
+        diaryIdx: 0,
+        // Per-conflict decision arrays (parallel to conflicts arrays)
+        entryDecisions: new Array(entryConflicts.length).fill(null),
+        diaryDecisions: new Array(diaryConflicts.length).fill(null)
+      };
+
+      const totalConflicts = entryConflicts.length + diaryConflicts.length;
+      if (totalConflicts === 0) {
+        // No conflicts — apply right away in the same in-modal area swap.
+        await applyMergePlan();
+        return;
+      }
+
+      openConflictBulk();
+    }
+
+    function openConflictBulk() {
+      const overlay = document.getElementById('conflict-overlay');
+      const modal   = document.getElementById('conflict-modal');
+      const sum     = document.getElementById('conflict-summary');
+      const detail  = document.getElementById('conflict-summary-detail');
+      const ec = importCtx.entryConflicts.length;
+      const dc = importCtx.diaryConflicts.length;
+      const total = ec + dc;
+      sum.textContent = `백업 파일과 지금 폰의 기록이 ${total}군데에서 같은 자리에 들어있어요.`;
+
+      let detailParts = [];
+      if (ec > 0) detailParts.push(`감각 기록 ${ec}개`);
+      if (dc > 0) detailParts.push(`일기 ${dc}개`);
+      detail.textContent = `${detailParts.join(' · ')} — 어떻게 할까요?`;
+
+      modal.dataset.stage = 'bulk';
+      overlay.hidden = false;
+    }
+
+    function closeConflictModal() {
+      const overlay = document.getElementById('conflict-overlay');
+      if (overlay) overlay.hidden = true;
+    }
+
+    // --- Decision flow ---
+
+    function decideAllEntries(choice) {
+      for (let i = 0; i < importCtx.entryDecisions.length; i++) {
+        importCtx.entryDecisions[i] = choice; // 'backup' | 'current'
+      }
+    }
+    function decideAllDiaries(choice) {
+      for (let i = 0; i < importCtx.diaryDecisions.length; i++) {
+        importCtx.diaryDecisions[i] = choice;
+      }
+    }
+
+    function senseLabelList(senses) {
+      if (!Array.isArray(senses) || senses.length === 0) return '';
+      return senses.map(s => (typeof SENSE_LABELS !== 'undefined' && SENSE_LABELS[s]) || s).join(' · ');
+    }
+
+    function formatEntryMetaLine(entry) {
+      const d = entry.createdAt ? new Date(entry.createdAt) : new Date(entry.id);
+      if (isNaN(d.getTime())) return '';
+      const y = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      const h = d.getHours();
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      const ampm = h < 12 ? '오전' : '오후';
+      const hh = h % 12 === 0 ? 12 : h % 12;
+      return `${y}-${mo}-${da} ${ampm} ${hh}:${mi}`;
+    }
+
+    function fillEntryStage() {
+      const modal = document.getElementById('conflict-modal');
+      modal.dataset.stage = 'entry';
+
+      const i = importCtx.entryIdx;
+      const total = importCtx.entryConflicts.length;
+      const pair = importCtx.entryConflicts[i];
+
+      document.getElementById('entry-counter').textContent = `감각 기록 — ${i + 1} / ${total}`;
+      const metaParts = [];
+      const ml = formatEntryMetaLine(pair.backup);
+      if (ml) metaParts.push(ml);
+      const sensesBackup = senseLabelList(pair.backup.senses);
+      if (sensesBackup) metaParts.push(sensesBackup);
+      document.getElementById('entry-meta').textContent = metaParts.join(' · ');
+
+      document.getElementById('entry-backup-text').textContent  = pair.backup.text || '';
+      document.getElementById('entry-backup-senses').textContent = senseLabelList(pair.backup.senses);
+      document.getElementById('entry-current-text').textContent  = pair.current.text || '';
+      document.getElementById('entry-current-senses').textContent = senseLabelList(pair.current.senses);
+    }
+
+    function fillDiaryStage() {
+      const modal = document.getElementById('conflict-modal');
+      modal.dataset.stage = 'diary';
+
+      const i = importCtx.diaryIdx;
+      const total = importCtx.diaryConflicts.length;
+      const pair = importCtx.diaryConflicts[i];
+
+      document.getElementById('diary-counter').textContent = `일기 — ${i + 1} / ${total}`;
+      document.getElementById('diary-meta').textContent = pair.backup.dateKey || pair.current.dateKey || '';
+
+      document.getElementById('diary-backup-text').textContent  = pair.backup.text || '';
+      document.getElementById('diary-current-text').textContent = pair.current.text || '';
+    }
+
+    // Called when user picks an entry-level decision. Advances to next entry,
+    // then to first diary if any, then to apply.
+    async function recordEntryDecision(choice) {
+      importCtx.entryDecisions[importCtx.entryIdx] = choice;
+      importCtx.entryIdx += 1;
+      if (importCtx.entryIdx < importCtx.entryConflicts.length) {
+        fillEntryStage();
+        return;
+      }
+      if (importCtx.diaryConflicts.length > 0) {
+        importCtx.diaryIdx = 0;
+        fillDiaryStage();
+        return;
+      }
+      await finalizeMerge();
+    }
+
+    // Called for each diary decision.
+    async function recordDiaryDecision(choice) {
+      importCtx.diaryDecisions[importCtx.diaryIdx] = choice;
+      importCtx.diaryIdx += 1;
+      if (importCtx.diaryIdx < importCtx.diaryConflicts.length) {
+        fillDiaryStage();
+        return;
+      }
+      await finalizeMerge();
+    }
+
+    // After the bulk choice route — apply all conflicts according to bulk decision.
+    async function finalizeMerge() {
+      // Validate all conflicts now have a decision.
+      // (bulk-choice path sets every slot before calling)
+      await applyMergePlan();
+    }
+
+    // --- Actually apply the plan to IndexedDB ---
+    async function applyMergePlan() {
+      closeConflictModal();
+      setSettingsStage('exporting');
+      const msg = document.getElementById('export-progress-msg');
+      if (msg) msg.textContent = '감각을 옮겨 담고 있어요';
+
+      try {
+        // Pre-scan existing ids so 'both' (둘 다 살리기) can avoid id collisions.
+        const liveEntries = await getAllEntries();
+        const existingIds = new Set(liveEntries.map(e => e.id));
+
+        let addedEntries = 0;
+        let addedDiaries = 0;
+
+        // 1) Entries with no conflict — put directly (rebuild Blob from data URL if any).
+        for (const be of importCtx.entryAddDirect) {
+          const ent = rebuildEntryFromBackup(be);
+          await putEntryRaw(ent);
+          addedEntries++;
+        }
+
+        // 2) Entry conflicts — apply per-decision.
+        for (let i = 0; i < importCtx.entryConflicts.length; i++) {
+          const pair = importCtx.entryConflicts[i];
+          const dec  = importCtx.entryDecisions[i];
+          if (dec === 'backup') {
+            const ent = rebuildEntryFromBackup(pair.backup);
+            // Overwrite at the same id
+            await putEntryRaw(ent);
+            addedEntries++;
+          } else if (dec === 'both') {
+            // Bump id by 1+ ms so both coexist; id is the keyPath.
+            // Also guard against collisions with any other existing entry
+            // (rare, but possible if user has dense data near the same ms).
+            const ent = rebuildEntryFromBackup(pair.backup);
+            ent.id = pair.backup.id + 1;
+            // Resolve any incidental id collision by stepping forward.
+            // Keeps id within the same second bucket whenever possible.
+            for (let step = 0; step < 1000; step++) {
+              const collide = existingIds.has(ent.id) || ent.id === pair.current.id;
+              if (!collide) break;
+              ent.id += 1;
+            }
+            existingIds.add(ent.id);
+            await putEntryRaw(ent);
+            addedEntries++;
+          }
+          // 'current' = do nothing
+        }
+
+        // 3) Diaries with no conflict — put directly.
+        for (const bd of importCtx.diaryAddDirect) {
+          await putDiary(bd);
+          addedDiaries++;
+        }
+
+        // 4) Diary conflicts — apply per-decision.
+        //    'top'    = keep backup (overwrite current at same dateKey)
+        //    'bottom' = keep current (do nothing)
+        //    'both'   = keep current diary as-is, append backup text inside diary on the same day
+        //               (1일 1개 원칙 유지 + 두 본문 한 일기 안에 합쳐서 살림)
+        for (let i = 0; i < importCtx.diaryConflicts.length; i++) {
+          const pair = importCtx.diaryConflicts[i];
+          const dec  = importCtx.diaryDecisions[i];
+          if (dec === 'top') {
+            await putDiary(pair.backup);
+            addedDiaries++;
+          } else if (dec === 'both') {
+            const merged = {
+              dateKey: pair.current.dateKey,
+              text: (pair.backup.text || '').trim() + '\n\n———\n\n' + (pair.current.text || '').trim(),
+              generatedAt: new Date().toISOString(),
+              sourceFingerprint: pair.current.sourceFingerprint || null
+            };
+            await putDiary(merged);
+            addedDiaries++;
+          }
+          // 'bottom' = do nothing
+        }
+
+        // 5) Month summaries — overwrite (fingerprint-based, regenerable).
+        for (const ms of importCtx.monthSummariesIn) {
+          if (ms && ms.monthKey) await putMonthSummary(ms);
+        }
+
+        // Done message — reuse export-done area but with import wording.
+        const doneMsg = document.getElementById('export-done-msg');
+        if (doneMsg) doneMsg.textContent = '일기를 다 옮겨 담았어요';
+        const sub = document.getElementById('export-done-sub');
+        if (sub) {
+          const parts = [];
+          if (addedEntries > 0) parts.push(`감각 기록 ${addedEntries}개`);
+          if (addedDiaries > 0) parts.push(`일기 ${addedDiaries}개`);
+          sub.textContent = parts.length ? `${parts.join(' · ')} 살렸어요.` : '바뀐 게 없어요.';
+        }
+        setSettingsStage('done');
+
+        // Refresh the current view's data
+        try {
+          if (typeof renderJournal === 'function') await renderJournal();
+          if (typeof renderDiaryTab === 'function') await renderDiaryTab();
+          if (typeof renderCalendar === 'function') await renderCalendar();
+        } catch (_) { /* non-fatal: data is in DB */ }
+
+        resetImportCtx();
+      } catch (err) {
+        setSettingsStage('idle');
+        alert('가져오기에 실패했어요: ' + (err && err.message ? err.message : err));
+        resetImportCtx();
+      }
+    }
+
+    function rebuildEntryFromBackup(be) {
+      const ent = {
+        id: be.id,
+        createdAt: be.createdAt,
+        senses: Array.isArray(be.senses) ? be.senses.slice() : [],
+        text: be.text || '',
+        photoBlob: null
+      };
+      if (be.photoDataUrl) {
+        const blob = dataUrlToBlob(be.photoDataUrl);
+        if (blob) ent.photoBlob = blob;
+      }
+      return ent;
+    }
+
     // ---------- Init ----------
     function init() {
       renderDate();
@@ -3626,13 +4598,82 @@
       }, { passive: true });
 
       // Settings modal
-      document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
-      document.getElementById('settings-close').addEventListener('click', closeSettingsModal);
+      document.getElementById('btn-settings').addEventListener('click', () => {
+        setSettingsStage('idle');
+        openSettingsModal();
+      });
+      document.getElementById('settings-close').addEventListener('click', () => {
+        // Don't close during export — CSS already disables pointer-events on the close button
+        // but guard here anyway in case the click reaches us.
+        const stage = document.getElementById('settings-modal').dataset.stage;
+        if (stage === 'exporting') return;
+        setSettingsStage('idle');
+        closeSettingsModal();
+      });
       document.getElementById('settings-save').addEventListener('click', saveApiKey);
       document.getElementById('settings-clear').addEventListener('click', clearApiKey);
       document.getElementById('settings-overlay').addEventListener('click', e => {
-        if (e.target.id === 'settings-overlay') closeSettingsModal();
+        if (e.target.id !== 'settings-overlay') return;
+        const stage = document.getElementById('settings-modal').dataset.stage;
+        if (stage === 'exporting') return; // don't allow backdrop close mid-export
+        setSettingsStage('idle');
+        closeSettingsModal();
       });
+
+      // ---------- Backup wiring ----------
+      const expBtn = document.getElementById('backup-export');
+      if (expBtn) expBtn.addEventListener('click', runExportBackup);
+
+      const impBtn = document.getElementById('backup-import');
+      if (impBtn) impBtn.addEventListener('click', startImportFlow);
+
+      const fileInput = document.getElementById('backup-file-input');
+      if (fileInput) {
+        fileInput.addEventListener('change', e => {
+          const file = e.target.files && e.target.files[0];
+          handleImportFileChosen(file);
+        });
+      }
+
+      const doneConfirm = document.getElementById('export-done-confirm');
+      if (doneConfirm) doneConfirm.addEventListener('click', () => {
+        setSettingsStage('idle');
+      });
+
+      // ---------- Conflict modal wiring ----------
+      const later = document.getElementById('conflict-later');
+      if (later) later.addEventListener('click', () => {
+        closeConflictModal();
+        resetImportCtx();
+      });
+
+      document.getElementById('conflict-keep-backup').addEventListener('click', async () => {
+        decideAllEntries('backup');
+        decideAllDiaries('top'); // 'top' = backup (위 카드)
+        await finalizeMerge();
+      });
+      document.getElementById('conflict-keep-current').addEventListener('click', async () => {
+        decideAllEntries('current');
+        decideAllDiaries('bottom'); // 'bottom' = current (아래 카드)
+        await finalizeMerge();
+      });
+      document.getElementById('conflict-one-by-one').addEventListener('click', () => {
+        if (importCtx.entryConflicts.length > 0) {
+          importCtx.entryIdx = 0;
+          fillEntryStage();
+        } else if (importCtx.diaryConflicts.length > 0) {
+          importCtx.diaryIdx = 0;
+          fillDiaryStage();
+        }
+      });
+
+      document.getElementById('entry-keep-backup').addEventListener('click', () => recordEntryDecision('backup'));
+      document.getElementById('entry-keep-current').addEventListener('click', () => recordEntryDecision('current'));
+      document.getElementById('entry-keep-both').addEventListener('click',    () => recordEntryDecision('both'));
+
+      document.getElementById('diary-keep-top').addEventListener('click',    () => recordDiaryDecision('top'));
+      document.getElementById('diary-keep-bottom').addEventListener('click', () => recordDiaryDecision('bottom'));
+      document.getElementById('diary-keep-both').addEventListener('click',   () => recordDiaryDecision('both'));
     }
 
     init();
