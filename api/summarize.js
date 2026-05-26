@@ -20,7 +20,7 @@
 //   - BAD_REQUEST : 클라이언트 입력 누락·형식 오류
 //   - FORBIDDEN_ORIGIN : Origin 검증 실패 (키 도용 차단)
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // ---------- Origin 검증 ----------
