@@ -1455,6 +1455,42 @@
       letter-spacing: 0.5px;
     }
 
+    /* #019: 감각기록 탭 — 그 날짜 일기 생성 진입점.
+       톤은 일기장 탭 .diary-today-action과 동일 (디자인 일관성). */
+    .flow-diary-action {
+      text-align: center;
+      padding: 24px 16px 28px;
+    }
+    .flow-diary-action[hidden] { display: none; }
+    .flow-diary-action .btn-primary {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 15px;
+      padding: 12px 28px;
+      color: #5C4631;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.2);
+      border-radius: 999px;
+      cursor: pointer;
+      letter-spacing: 1.2px;
+      box-shadow:
+        0 1px 2px rgba(92, 70, 49, 0.08),
+        0 4px 14px rgba(92, 70, 49, 0.06);
+    }
+    .flow-diary-action .btn-primary:active { transform: scale(0.97); }
+    .flow-diary-action .btn-primary[disabled] {
+      opacity: 0.55;
+      cursor: default;
+      pointer-events: none;
+    }
+    .flow-diary-hint {
+      margin-top: 10px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 12px;
+      color: #B5A38B;
+      letter-spacing: 0.5px;
+    }
+
     /* ===================================================== */
     /* Month summary card                                     */
     /* ===================================================== */
@@ -1785,6 +1821,11 @@
               <div class="entry-feed" id="entry-feed"></div>
               <div class="entry-empty" id="entry-empty" hidden>
                 아직 기록이 없어요.<br>홈에서 첫 감각을 남겨보세요.
+              </div>
+              <!-- #019: 그 날짜의 일기 생성 진입점 (감각기록 탭 맨 아래) -->
+              <div class="flow-diary-action" id="flow-diary-action" hidden>
+                <button class="btn-primary" id="btn-generate-flow" type="button"></button>
+                <div class="flow-diary-hint" id="flow-diary-hint"></div>
               </div>
             </div>
           </div>
@@ -2447,6 +2488,7 @@
     async function renderJournal() {
       const feed  = document.getElementById('entry-feed');
       const empty = document.getElementById('entry-empty');
+      const action = document.getElementById('flow-diary-action');
 
       updateFlowDateHeader();
       freeFeedBlobUrls();
@@ -2465,10 +2507,31 @@
         empty.innerHTML = isFlowToday()
           ? '아직 기록이 없어요.<br>홈에서 첫 감각을 남겨보세요.'
           : '이 날엔 감각 기록이 없어요';
+        // 감각 기록 0개 — 일기 생성 진입점 숨김.
+        if (action) action.hidden = true;
         return;
       }
       empty.hidden = true;
       filtered.forEach(e => feed.appendChild(buildEntryCard(e)));
+
+      // #019: 감각 기록 1개 이상 — 그 날짜의 일기 생성 진입점 노출.
+      if (action) {
+        const btn = document.getElementById('btn-generate-flow');
+        const hint = document.getElementById('flow-diary-hint');
+        const label = flowDiaryButtonLabel();
+        btn.textContent = label;
+        btn.disabled = false;
+        hint.textContent = `이 날 감각 ${filtered.length}개를 모아 일기로 묶어요`;
+        action.hidden = false;
+      }
+    }
+
+    // #019: 감각기록 탭 버튼 라벨 — 오늘이면 '오늘 일기 쓰기',
+    //       아니면 '{M}월 {D}일 일기 쓰기' (감각 일기 미니멀 톤).
+    function flowDiaryButtonLabel() {
+      if (isFlowToday()) return '오늘 일기 쓰기';
+      const d = flowState.date;
+      return `${d.getMonth() + 1}월 ${d.getDate()}일 일기 쓰기`;
     }
 
     // ---------- Flow tab date navigation ----------
@@ -3122,17 +3185,34 @@
         .join('\n');
     }
 
-    async function generateTodayDiary(opts) {
-      const force = !!(opts && opts.force);
-      const dkey = todayDateKey();
+    // #019: 임의 날짜의 일기 생성 — generateTodayDiary는 wrapper로 유지(호환성).
+    // opts: { force, buttonId, idleLabel, afterCreate }
+    //   - buttonId: 진행 표시할 버튼 id ('btn-generate-today' or 'btn-generate-flow')
+    //   - idleLabel: 실패/완료 시 복원할 버튼 라벨
+    //   - afterCreate: 'go-diary-tab' 이면 일기장 탭으로 이동
+    async function generateDiaryForDate(dkey, opts) {
+      opts = opts || {};
+      const force = !!opts.force;
+      const buttonId = opts.buttonId || 'btn-generate-today';
+      const idleLabel = opts.idleLabel || '오늘 일기 쓰기';
+
+      // 미래 차단 안전판 (감각기록 탭 구조상 자연 차단되지만 함수 진입 시 안전판 한 줄)
+      const todayKey = todayDateKey();
+      if (dkey > todayKey) {
+        alert('미래 날짜의 일기는 만들 수 없어요.');
+        return;
+      }
+
       const entries = await getAllEntries();
-      const todayEntries = entries.filter(e => {
+      const dayEntries = entries.filter(e => {
         const d = new Date(e.createdAt);
         return dkey === dateKey(d.getFullYear(), d.getMonth(), d.getDate());
       });
 
-      if (todayEntries.length === 0) {
-        alert('오늘 감각 기록이 아직 없어요.');
+      if (dayEntries.length === 0) {
+        alert(dkey === todayKey
+          ? '오늘 감각 기록이 아직 없어요.'
+          : '이 날엔 감각 기록이 없어요.');
         return;
       }
 
@@ -3141,20 +3221,25 @@
         return;
       }
 
-      const fp = await fingerprintEntries(todayEntries);
+      const fp = await fingerprintEntries(dayEntries);
       if (!force) {
         const existing = await getDiary(dkey);
         if (existing && existing.sourceFingerprint === fp) {
-          await renderDiaryTab();
+          // 동일 지문 — 재생성 불필요. 일기장 탭으로 이동 요청이 있으면 이동.
+          if (opts.afterCreate === 'go-diary-tab') {
+            await goToDiaryTabFor(dkey);
+          } else {
+            await renderDiaryTab();
+          }
           return;
         }
       }
 
-      const btn = document.getElementById('btn-generate-today');
+      const btn = document.getElementById(buttonId);
       if (btn) { btn.disabled = true; btn.textContent = '쓰는 중…'; }
 
       try {
-        const userText = formatEntriesForPrompt(todayEntries);
+        const userText = formatEntriesForPrompt(dayEntries);
         const text = (await callGemini(DIARY_SYSTEM_PROMPT, userText)).trim();
         await putDiary({
           dateKey: dkey,
@@ -3162,16 +3247,37 @@
           generatedAt: new Date().toISOString(),
           sourceFingerprint: fp
         });
-        await renderDiaryTab();
+        if (opts.afterCreate === 'go-diary-tab') {
+          await goToDiaryTabFor(dkey);
+        } else {
+          await renderDiaryTab();
+        }
       } catch (err) {
         // 사용자 액션 가능한 케이스(NO_KEY·NETWORK·RATE_LIMIT·AUTH)는 한국어 메시지만.
         // 비정상 응답·미지 에러는 진단 부록 첨부해서 비서팀에 그대로 전달 가능하게.
         const baseMsg = geminiErrorMessage(err);
         const friendly = err && ['NO_KEY','NETWORK','RATE_LIMIT','AUTH'].indexOf(err.code) !== -1;
         alert(baseMsg + (friendly ? '' : geminiDiagAppendix(err)));
-        if (btn) { btn.disabled = false; btn.textContent = '오늘 일기 쓰기'; }
+        if (btn) { btn.disabled = false; btn.textContent = idleLabel; }
         if (err && err.code === 'NO_KEY') openSettingsModal();
       }
+    }
+
+    // 일기 생성 후 일기장 탭으로 이동 (그 날짜가 속한 달로 정렬).
+    async function goToDiaryTabFor(dkey) {
+      const [y, m] = dkey.split('-').map(Number);
+      diaryState.year = y;
+      diaryState.month = m - 1;
+      setTab('diary');
+      await renderDiaryTab();
+    }
+
+    // 호환 wrapper — 기존 호출부(rewriteTodayDiary·일기장 탭 '오늘 일기 쓰기') 그대로 동작.
+    async function generateTodayDiary(opts) {
+      return generateDiaryForDate(todayDateKey(), Object.assign({
+        buttonId: 'btn-generate-today',
+        idleLabel: '오늘 일기 쓰기'
+      }, opts || {}));
     }
 
     async function rewriteTodayDiary() {
@@ -3377,6 +3483,16 @@
       document.getElementById('tab-diary').addEventListener('click', async () => {
         setTab('diary');
         await renderDiaryTab();
+      });
+
+      // #019: 감각기록 탭 — 그 날짜 일기 쓰기 버튼.
+      // 누르면 그 날짜의 일기 생성/조회 후 일기장 탭으로 이동.
+      document.getElementById('btn-generate-flow').addEventListener('click', async () => {
+        await generateDiaryForDate(flowDateKey(), {
+          buttonId: 'btn-generate-flow',
+          idleLabel: flowDiaryButtonLabel(),
+          afterCreate: 'go-diary-tab'
+        });
       });
 
       // Calendar month nav
