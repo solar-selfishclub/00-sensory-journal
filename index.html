@@ -2245,9 +2245,18 @@
       <div class="settings-modal" id="settings-modal" data-stage="idle" role="dialog" aria-label="AI 설정">
 
         <!-- Stage: idle (AI 설정 + 데이터 백업) -->
+        <!-- #029 Vercel 이전: API 키는 서버 환경변수 관리. 입력 UI는 시각적으로 숨김(hidden) — -->
+        <!-- 기존 함수(saveApiKey·clearApiKey·openSettingsModal의 input 참조)·init 리스너는 -->
+        <!-- 회귀 방지 위해 그대로 유지. hidden 상태라 동작 영향 0건. -->
         <div class="settings-stage-idle">
           <h3 class="settings-title">AI 설정</h3>
-          <label class="settings-label" for="settings-key">Gemini API 키</label>
+
+          <!-- 안내 — 사용자 입력 부담 0건 한지 톤으로 박제 -->
+          <span class="settings-label">감각 회로</span>
+          <p class="settings-section-hint">감각을 잇는 회로는 이미 켜져 있어요.</p>
+
+          <!-- 기존 입력 UI — hidden, 회귀 방지 흔적만 -->
+          <label class="settings-label" for="settings-key" hidden>Gemini API 키</label>
           <input
             class="settings-input"
             id="settings-key"
@@ -2255,11 +2264,12 @@
             placeholder="키를 붙여넣어 주세요"
             autocomplete="off"
             spellcheck="false"
+            hidden
           >
           <a class="settings-link" id="settings-help"
              href="https://aistudio.google.com/app/apikey"
-             target="_blank" rel="noopener">키 발급받는 법 ›</a>
-          <div class="settings-actions">
+             target="_blank" rel="noopener" hidden>키 발급받는 법 ›</a>
+          <div class="settings-actions" hidden>
             <button class="settings-btn-ghost" id="settings-clear" type="button">지우기</button>
             <button class="settings-btn-primary" id="settings-save" type="button">저장</button>
           </div>
@@ -2514,32 +2524,27 @@
       return bytes.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
     }
 
-    // ---------- Gemini API ----------
-    const GEMINI_MODEL = 'gemini-2.5-flash';
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    // ---------- Gemini API (#029 Vercel Serverless 경유) ----------
+    // 키는 서버 환경변수(GEMINI_API_KEY)에서만 읽힘. 클라이언트 노출 0건.
+    // 함수 엔드포인트: /api/summarize — 같은 origin(상대 경로)이라 CORS preflight 없음.
+    const SUMMARIZE_ENDPOINT = '/api/summarize';
 
+    // 서버가 키를 관리하므로 클라이언트 측 키 존재 여부 가드는 항상 통과.
+    // 기존 호출부 두 곳(라인 약 3697 일기 생성 가드, 라인 약 3792 month summary silent skip)
+    // 시그니처 호환 — truthy placeholder 반환. localStorage 의존 0건.
     function getApiKey() {
-      const k = (localStorage.getItem('geminiApiKey') || '').trim();
-      return k || null;
+      return 'server-managed';
     }
 
+    // callGemini — 시그니처 유지(systemText, userText) / 에러 분류 7종 유지
+    // (NO_KEY·NETWORK·RATE_LIMIT·AUTH·HTTP·EMPTY·PARSE).
+    // 서버 응답 4xx/5xx에 { error: { code, message } } 포함되면 그 code를 그대로 전파.
     async function callGemini(systemText, userText) {
-      const key = getApiKey();
-      if (!key) {
-        const e = new Error('API key not set');
-        e.code = 'NO_KEY';
-        throw e;
-      }
-
-      const url = `${GEMINI_URL}?key=${encodeURIComponent(key)}`;
-      const body = {
-        systemInstruction: { parts: [{ text: systemText }] },
-        contents: [{ role: 'user', parts: [{ text: userText }] }]
-      };
+      const body = { systemText, userText };
 
       let res;
       try {
-        res = await fetch(url, {
+        res = await fetch(SUMMARIZE_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -2550,36 +2555,27 @@
         throw e;
       }
 
-      if (res.status === 429) {
-        const e = new Error('Rate limit');
-        e.code = 'RATE_LIMIT';
-        e.diagStatus = 429;
-        try { e.diagBody = (await res.text()).slice(0, 400); } catch (_) {}
-        throw e;
-      }
-      if (res.status === 401 || res.status === 403) {
-        const e = new Error('Auth failed');
-        e.code = 'AUTH';
-        e.diagStatus = res.status;
-        try { e.diagBody = (await res.text()).slice(0, 400); } catch (_) {}
-        throw e;
-      }
+      // 서버 에러 — 본문 JSON에 error.code가 있으면 그대로 사용, 없으면 HTTP로 fallback.
       if (!res.ok) {
         let bodyText = '';
+        let parsed = null;
         try { bodyText = await res.text(); } catch (_) {}
-
-        // HTTP 400 + 응답 본문에 API_KEY_INVALID = Google이 키 자체를 거부한 응답.
-        // 401/403뿐 아니라 400으로 오는 케이스도 있어 본문 패턴으로 AUTH 분류.
-        if (res.status === 400 && bodyText.indexOf('API_KEY_INVALID') !== -1) {
-          const e = new Error('API key invalid');
-          e.code = 'AUTH';
-          e.diagStatus = res.status;
-          e.diagBody = bodyText.slice(0, 400);
-          throw e;
+        if (bodyText) {
+          try { parsed = JSON.parse(bodyText); } catch (_) {}
         }
+        const serverCode = parsed && parsed.error && parsed.error.code;
+        const serverMsg  = parsed && parsed.error && parsed.error.message;
 
-        const e = new Error(`HTTP ${res.status}`);
-        e.code = 'HTTP';
+        const e = new Error(serverMsg || `HTTP ${res.status}`);
+        // 서버가 분류한 code를 우선 신뢰. 클라이언트 분류와 동일 어휘.
+        if (serverCode === 'NO_KEY' || serverCode === 'AUTH' || serverCode === 'RATE_LIMIT' ||
+            serverCode === 'EMPTY'  || serverCode === 'PARSE' || serverCode === 'NETWORK' ||
+            serverCode === 'HTTP'   || serverCode === 'BAD_REQUEST' ||
+            serverCode === 'FORBIDDEN_ORIGIN') {
+          e.code = serverCode;
+        } else {
+          e.code = 'HTTP';
+        }
         e.diagStatus = res.status;
         e.diagBody = bodyText.slice(0, 400);
         throw e;
@@ -2594,7 +2590,7 @@
         e.diagMessage = (parseErr && parseErr.message) || '';
         throw e;
       }
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      const text = (data && typeof data.text === 'string') ? data.text : '';
       if (!text) {
         const e = new Error('Empty response');
         e.code = 'EMPTY';
@@ -2606,19 +2602,24 @@
 
     function geminiErrorMessage(err) {
       switch (err && err.code) {
-        case 'NO_KEY':     return '먼저 ⚙ 에서 API 키를 입력해주세요.';
+        // 서버 측 키 미설정(환경변수 누락) — 솔라가 비서팀에 전달 필요한 케이스.
+        case 'NO_KEY':     return '서버 설정 점검이 필요해요. 잠시 후 다시 시도해주세요.';
         case 'NETWORK':    return '연결이 잠시 끊겼어요. 다시 시도해주세요.';
         case 'RATE_LIMIT': return '오늘 무료 한도가 다 찼어요. 내일 다시 시도해주세요.';
-        case 'AUTH':       return 'API 키가 올바르지 않은 것 같아요. ⚙ 에서 확인해주세요.';
+        case 'AUTH':       return '서버 키 점검이 필요해요. 잠시 후 다시 시도해주세요.';
         case 'EMPTY':      return '응답이 비어 있어요. 잠시 후 다시 시도해주세요.';
         case 'HTTP':       return 'API 응답 오류가 났어요. 잠시 후 다시 시도해주세요.';
         case 'PARSE':      return '응답을 읽지 못했어요. 잠시 후 다시 시도해주세요.';
+        // 신규 — Vercel Serverless 함수에서만 발생.
+        case 'BAD_REQUEST':       return '요청을 만들지 못했어요. 잠시 후 다시 시도해주세요.';
+        case 'FORBIDDEN_ORIGIN':  return '서버 출처 설정 점검이 필요해요. 잠시 후 다시 시도해주세요.';
         default:           return '지금은 일기를 못 만들었어요. 잠시 후 다시 시도해주세요.';
       }
     }
 
     // 진단 부록 — 비정상 응답(HTTP·EMPTY·PARSE)이나 미지의 에러일 때만 alert 뒤에 첨부.
     // 사용자가 비서팀/개발팀에 그대로 전달할 수 있게 status·body·code 노출 (안전망).
+    // #029 이후 모델명은 서버(api/summarize.js)에서 관리 — 클라이언트 진단 부록에서 제거.
     function geminiDiagAppendix(err) {
       const lines = [];
       lines.push(`code: ${(err && err.code) || '(none)'}`);
@@ -2626,7 +2627,7 @@
       if (err && err.diagBody)    lines.push(`body: ${err.diagBody}`);
       if (err && err.diagMessage) lines.push(`detail: ${err.diagMessage}`);
       if (err && err.message && !err.code) lines.push(`message: ${err.message}`);
-      lines.push(`model: ${GEMINI_MODEL}`);
+      lines.push(`endpoint: ${SUMMARIZE_ENDPOINT}`);
       return '\n\n[진단 정보 — 그대로 비서팀/개발팀에 전달]\n' + lines.join('\n');
     }
 
@@ -3731,13 +3732,14 @@
           await renderDiaryTab();
         }
       } catch (err) {
-        // 사용자 액션 가능한 케이스(NO_KEY·NETWORK·RATE_LIMIT·AUTH)는 한국어 메시지만.
-        // 비정상 응답·미지 에러는 진단 부록 첨부해서 비서팀에 그대로 전달 가능하게.
+        // 사용자 액션 가능한 케이스(NETWORK·RATE_LIMIT)는 한국어 메시지만.
+        // 서버 측 케이스(NO_KEY·AUTH·FORBIDDEN_ORIGIN·BAD_REQUEST)와 비정상 응답·미지 에러는
+        // 진단 부록 첨부해서 솔라/비서팀에 그대로 전달 가능하게.
         const baseMsg = geminiErrorMessage(err);
-        const friendly = err && ['NO_KEY','NETWORK','RATE_LIMIT','AUTH'].indexOf(err.code) !== -1;
+        const friendly = err && ['NETWORK','RATE_LIMIT'].indexOf(err.code) !== -1;
         alert(baseMsg + (friendly ? '' : geminiDiagAppendix(err)));
         if (btn) { btn.disabled = false; btn.textContent = idleLabel; }
-        if (err && err.code === 'NO_KEY') openSettingsModal();
+        // #029 이후 NO_KEY는 서버 환경변수 누락 케이스라 설정 모달 자동 노출 의미 없음.
       }
     }
 
