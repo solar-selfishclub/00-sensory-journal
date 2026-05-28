@@ -2951,7 +2951,18 @@
       feedBlobUrls = [];
     }
 
-    function buildEntryCard(e) {
+    // #041: buildEntryCard를 async화. 사진 src를 blob URL이 아닌 base64 dataURL로 박음.
+    //       회귀 원인 — blob URL lifecycle race condition (iOS Safari standalone PWA 특이성):
+    //       "고치기" 후 view 전환(input → journal) 도중 hidden 상태(.view 기본 display:none)에서
+    //       img.src 박는 타이밍과 feedBlobUrls revoke·재할당 시점이 race를 일으켜
+    //       broken image (✕박스) 노출. 새로고침 시 정상 = 데이터 무파손, 메모리상의 시각 회귀.
+    //       #039의 _photoPreviewBlobUrl 단일 추적자 + Blob.slice() 안전망은 photo-preview 영역만
+    //       다루었고 buildEntryCard의 feedBlobUrls 경로는 그대로였음 → 카드 영역 회귀 미해소.
+    //       dataURL은 lifecycle 없음 — 한 번 박으면 영구. PWA 컨테이너의 blob 정리 정책과 무관.
+    //       메모리 영향: 카드 평균 사진 ~200KB · base64 변환 +33% (~270KB). 일간 5~10개 카드라
+    //       iOS Safari 메모리 한계 대비 미미. diary carousel·표지 사진(blob URL 그대로 유지)에
+    //       비해 회귀 통점이 명확한 감각기록 탭 카드만 dataURL 채택.
+    async function buildEntryCard(e) {
       const card = document.createElement('article');
       card.className = 'entry-card';
 
@@ -2988,13 +2999,18 @@
       card.appendChild(head);
 
       if (e.photoBlob) {
-        const img = document.createElement('img');
-        img.className = 'entry-photo';
-        const url = URL.createObjectURL(e.photoBlob);
-        feedBlobUrls.push(url);
-        img.src = url;
-        img.alt = '';
-        card.appendChild(img);
+        // #041: blob URL 대신 dataURL — lifecycle 없음, race condition 원천 차단.
+        //       FileReader 실패 (매우 드묾) 시 img 노드 자체를 DOM에 추가하지 않음 (broken image icon 회피).
+        try {
+          const dataUrl = await blobToBase64(e.photoBlob);
+          const img = document.createElement('img');
+          img.className = 'entry-photo';
+          img.alt = '';
+          img.src = dataUrl;
+          card.appendChild(img);
+        } catch (err) {
+          // 사진 없는 카드로 자연 노출 (감각 dot · 텍스트 · 지우기 그대로).
+        }
       }
 
       const p = document.createElement('p');
@@ -3180,7 +3196,9 @@
         return;
       }
       empty.hidden = true;
-      filtered.forEach(e => feed.appendChild(buildEntryCard(e)));
+      // #041: buildEntryCard async화 — Promise.all로 순서 보존, dataURL 변환 병렬화.
+      const cards = await Promise.all(filtered.map(e => buildEntryCard(e)));
+      cards.forEach(c => feed.appendChild(c));
 
       // #019: 감각 기록 1개 이상 — 그 날짜의 일기 생성 진입점 노출.
       if (action) {
@@ -3445,7 +3463,9 @@
           empty.textContent = '이 날의 기록이 없어요';
           dayContainer.appendChild(empty);
         } else {
-          entries.forEach(e => dayContainer.appendChild(buildEntryCard(e)));
+          // #041: buildEntryCard async화 — Promise.all로 순서 보존, dataURL 변환 병렬화.
+          const cards = await Promise.all(entries.map(e => buildEntryCard(e)));
+          cards.forEach(c => dayContainer.appendChild(c));
         }
       }
     }
