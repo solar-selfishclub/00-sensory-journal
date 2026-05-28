@@ -854,6 +854,134 @@
     .entry-delete:active,
     .entry-delete:hover { color: #6B5340; }
 
+    /* ----- #036 entry 수정 버튼 (✎) + entry-head 우측 컨테이너 ----- */
+    .entry-head-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .entry-edit {
+      width: 28px;
+      height: 28px;
+      padding: 4px;
+      margin-left: 10px;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      line-height: 1;
+      color: #B5A38B;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+    .entry-edit:hover,
+    .entry-edit:active {
+      color: #6B5340;
+      background: rgba(92, 70, 49, 0.06);
+    }
+    .entry-edit:focus-visible {
+      outline: 1px dashed rgba(92, 70, 49, 0.3);
+      outline-offset: 2px;
+    }
+
+    /* ----- #036 수정 모드 푸터: 좌측 "지우기" 버튼 ----- */
+    .btn-delete-edit {
+      display: none; /* 기본 입력 모드에서는 숨김. .is-edit-mode 진입 시 노출 */
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #B5A38B;
+      background: transparent;
+      border: none;
+      padding: 8px 6px;
+      letter-spacing: 1.2px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .btn-delete-edit:active,
+    .btn-delete-edit:hover { color: #6B5340; }
+    .input-footer.is-edit-mode .btn-delete-edit { display: inline-block; }
+
+    /* ----- #036 삭제 확인 다이얼로그 (settings-overlay/modal 토큰 100% 재사용) ----- */
+    .confirm-delete-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(250, 248, 242, 0.86);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 105;
+      padding: 24px;
+      backdrop-filter: blur(2px);
+    }
+    .confirm-delete-overlay[hidden] { display: none; }
+    .confirm-delete-modal {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      background: #FBF7EE;
+      border: 1px solid rgba(92, 70, 49, 0.18);
+      border-radius: 10px;
+      padding: 24px 22px 20px;
+      box-shadow:
+        0 2px 6px rgba(92, 70, 49, 0.08),
+        0 10px 30px rgba(92, 70, 49, 0.10);
+      text-align: center;
+    }
+    .confirm-delete-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-weight: 500;
+      font-size: 17px;
+      color: #5C4631;
+      margin: 0 0 10px;
+      letter-spacing: 0.6px;
+    }
+    .confirm-delete-hint {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 13px;
+      color: #9C8770;
+      line-height: 1.55;
+      margin: 0 0 22px;
+      letter-spacing: 0.4px;
+    }
+    .confirm-delete-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .confirm-delete-cancel {
+      flex: 1;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      color: #9C8770;
+      background: transparent;
+      border: 1px solid rgba(92, 70, 49, 0.16);
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.2s ease;
+    }
+    .confirm-delete-cancel:active { transform: scale(0.97); }
+    .confirm-delete-yes {
+      flex: 1;
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      color: #6B5340;
+      background: #F3EFE7;
+      border: 1px solid rgba(92, 70, 49, 0.22);
+      box-shadow: 0 1px 2px rgba(92, 70, 49, 0.06);
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.2s ease;
+    }
+    .confirm-delete-yes:active { transform: scale(0.97); }
+
     /* ----- Calendar tab ----- */
     /* Calendar mode pulls journal-body padding in so each cell can breathe. */
     .journal-body.mode-calendar {
@@ -2138,11 +2266,24 @@
         >
       </div>
 
-      <footer class="input-footer">
+      <footer class="input-footer" id="input-footer">
+        <button class="btn-delete-edit" id="btn-delete-edit" type="button">지우기</button>
         <button class="btn-back" id="btn-back" type="button">‹ 이전</button>
         <button class="btn-save" id="btn-save" type="button">기록하기</button>
       </footer>
     </section>
+
+    <!-- ===== #036 삭제 확인 다이얼로그 ===== -->
+    <div class="confirm-delete-overlay" id="confirm-delete-overlay" hidden>
+      <div class="confirm-delete-modal" role="dialog" aria-labelledby="confirm-delete-title" aria-modal="true">
+        <h3 class="confirm-delete-title" id="confirm-delete-title">정말 지울까요?</h3>
+        <p class="confirm-delete-hint">한 번 지운 기록은 되돌릴 수 없어요.</p>
+        <div class="confirm-delete-actions">
+          <button class="confirm-delete-cancel" id="confirm-delete-cancel" type="button">아니요</button>
+          <button class="confirm-delete-yes" id="confirm-delete-yes" type="button">네</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== Screen 3: Done (record complete) ===== -->
     <section class="view" id="view-done">
@@ -2365,7 +2506,11 @@
     const state = {
       selectedSenses: new Set(),
       photoBlob: null,
-      text: ''
+      text: '',
+      // #036: 수정 모드 추적용. null이면 신규 entry, 값 있으면 해당 id 덮어쓰기.
+      editingEntryId: null,
+      // #036: 수정 모드 진입 시 원본 entry의 createdAt 보존용 (덮어쓰기 시 동일 값 재사용).
+      editingCreatedAt: null
     };
 
     const SENSE_LABELS = {
@@ -2831,6 +2976,10 @@
       time.textContent = formatEntryTime(e.createdAt);
       head.appendChild(time);
 
+      // #036: dots + ✎ 수정 버튼을 우측 컨테이너에 묶음 (.entry-head-right)
+      const right = document.createElement('div');
+      right.className = 'entry-head-right';
+
       const dots = document.createElement('span');
       dots.className = 'entry-dots';
       (e.senses || []).forEach(s => {
@@ -2838,8 +2987,17 @@
         d.className = 'picked-dot ' + s;
         dots.appendChild(d);
       });
-      head.appendChild(dots);
+      right.appendChild(dots);
 
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'entry-edit';
+      edit.setAttribute('aria-label', '이 기록 고치기');
+      edit.textContent = '✎'; // ✎ U+270E
+      edit.addEventListener('click', () => openEditMode(e.id));
+      right.appendChild(edit);
+
+      head.appendChild(right);
       card.appendChild(head);
 
       if (e.photoBlob) {
@@ -2857,18 +3015,14 @@
       p.textContent = e.text;
       card.appendChild(p);
 
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'entry-delete';
-      del.textContent = '지우기';
-      del.addEventListener('click', () => deleteEntry(e.id));
-      card.appendChild(del);
+      // #036: entry 카드 안 "지우기" 버튼 제거 (.entry-delete CSS는 라인 840-855 자연 방치 — 디자인팀 cleanup 카드 후보).
+      // 삭제 경로는 수정 모드 푸터의 .btn-delete-edit + .confirm-delete-overlay로 이동.
 
       return card;
     }
 
+    // #036: 네이티브 confirm() 제거. 호출부(.confirm-delete-yes 핸들러)가 다이얼로그 컨펌까지 책임지므로 본 함수는 순수 삭제.
     async function deleteEntry(id) {
-      if (!confirm('이 기록을 지울까요?')) return;
       const db = await openDB();
       await new Promise((resolve, reject) => {
         const tx = db.transaction(STORE, 'readwrite');
@@ -2882,6 +3036,72 @@
       } else {
         await renderJournal();
       }
+    }
+
+    // #036: id로 entry 1건 조회. 수정 모드 prefill 진입 시 사용.
+    async function getEntryById(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    // #036: 수정 모드 진입 — entry 데이터를 입력 화면에 prefill + .is-edit-mode toggle + btn-save 텍스트 "기록하기" → "고치기".
+    async function openEditMode(id) {
+      const entry = await getEntryById(id);
+      if (!entry) return;
+
+      // 상태 박제 — saveAndShowDone 분기 + 다이얼로그 yes 분기에서 참조.
+      state.editingEntryId = id;
+      state.editingCreatedAt = entry.createdAt || null;
+
+      // selectedSenses prefill
+      state.selectedSenses = new Set(entry.senses || []);
+
+      // 사진 prefill (photoBlob → photo-preview src + photo-frame visible toggle)
+      state.photoBlob = entry.photoBlob || null;
+      const photoImg = document.getElementById('photo-preview');
+      const photoFrame = document.getElementById('photo-frame');
+      if (photoImg.src && photoImg.src.startsWith('blob:')) URL.revokeObjectURL(photoImg.src);
+      if (entry.photoBlob) {
+        photoImg.src = URL.createObjectURL(entry.photoBlob);
+        photoFrame.classList.add('has-photo');
+      } else {
+        photoImg.removeAttribute('src');
+        photoFrame.classList.remove('has-photo');
+      }
+
+      // 텍스트 prefill
+      state.text = entry.text || '';
+      document.getElementById('text-input').value = state.text;
+
+      // 헤더 picked dots/names 갱신 + 푸터 모드 toggle
+      renderPicked();
+      _forceClosePicker();
+      document.getElementById('input-footer').classList.add('is-edit-mode');
+      document.getElementById('btn-save').textContent = '고치기';
+      updateSaveButton();
+
+      showView('input');
+    }
+
+    // #036: 수정 모드 종료 — 상태/푸터/btn-save 텍스트를 신규 입력 모드 기본값으로 회귀.
+    function closeEditMode() {
+      state.editingEntryId = null;
+      state.editingCreatedAt = null;
+      document.getElementById('input-footer').classList.remove('is-edit-mode');
+      document.getElementById('btn-save').textContent = '기록하기';
+    }
+
+    // #036: 삭제 확인 다이얼로그 열기/닫기.
+    function openConfirmDelete() {
+      document.getElementById('confirm-delete-overlay').hidden = false;
+    }
+    function closeConfirmDelete() {
+      document.getElementById('confirm-delete-overlay').hidden = true;
     }
 
     // ---------- Flow tab date state ----------
@@ -3802,6 +4022,32 @@
     }
 
     async function saveAndShowDone() {
+      // #036: 수정 모드 분기 — editingEntryId null이면 신규 entry, 값 있으면 동일 id 덮어쓰기 + createdAt 보존.
+      if (state.editingEntryId !== null) {
+        const updated = {
+          id: state.editingEntryId,
+          createdAt: state.editingCreatedAt || new Date().toISOString(),
+          senses: [...state.selectedSenses],
+          photoBlob: state.photoBlob,
+          text: state.text.trim()
+        };
+        try {
+          await putEntryRaw(updated);
+        } catch (err) {
+          alert('저장에 실패했어요: ' + err.message);
+          return;
+        }
+        // 수정 모드 종료 후 감각기록 탭으로 복귀 (Done 화면 거치지 않음 — 신규 기록과 시각 위계 분리).
+        // 일기 자동 재생성 X — 기존 diaries 그대로 두고 솔라가 일기장에서 "다시 쓰기" 직접 누를 때만 갱신 (#036 박제 5).
+        closeEditMode();
+        resetInputDraft();
+        resetHome();
+        await enterJournal();
+        showView('journal');
+        return;
+      }
+
+      // 신규 entry 기존 흐름
       const entry = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
@@ -4333,6 +4579,8 @@
       // Home → Input
       document.getElementById('btn-next').addEventListener('click', () => {
         if (state.selectedSenses.size === 0) return;
+        // #036: 홈 → 신규 입력 진입은 항상 수정 모드 해제 (편집 중 다른 경로로 빠져나왔다 다시 들어오는 케이스 안전망)
+        closeEditMode();
         resetInputDraft();
         renderPicked();
         // sense picker는 항상 닫힌 상태로 진입 (이전 펼침 상태가 남아있지 않게)
@@ -4357,9 +4605,53 @@
       // 확인 버튼
       document.getElementById('sense-picker-confirm').addEventListener('click', closeSensePicker);
 
-      // Input → Home
-      document.getElementById('btn-back').addEventListener('click', () => {
+      // Input → Home (또는 수정 모드 취소 시 감각기록 탭 복귀)
+      document.getElementById('btn-back').addEventListener('click', async () => {
+        // #036: 수정 모드 이전 취소 — 변경 저장 안 하고 감각기록 탭 복귀.
+        if (state.editingEntryId !== null) {
+          closeEditMode();
+          resetInputDraft();
+          resetHome();
+          await enterJournal();
+          showView('journal');
+          return;
+        }
         showView('home');
+      });
+
+      // #036: 수정 모드 푸터 좌측 "지우기" → 삭제 확인 다이얼로그.
+      document.getElementById('btn-delete-edit').addEventListener('click', () => {
+        if (state.editingEntryId === null) return;
+        openConfirmDelete();
+      });
+
+      // #036: 다이얼로그 "아니요" + overlay 바깥 클릭 → 닫기만 (삭제 취소).
+      document.getElementById('confirm-delete-cancel').addEventListener('click', closeConfirmDelete);
+      document.getElementById('confirm-delete-overlay').addEventListener('click', (e) => {
+        // modal 안쪽 클릭은 닫지 않음. overlay 본체(바깥) 클릭만 닫음.
+        if (e.target.id === 'confirm-delete-overlay') closeConfirmDelete();
+      });
+
+      // #036: 다이얼로그 "네" → deleteEntry(editingEntryId) + 입력 화면 닫고 감각기록 탭 복귀.
+      // 삭제 후 별도 안내 메시지 0건 — 사라진 entry 자체가 메시지 (솔라 톤 "단순함 우선" #035 박제).
+      document.getElementById('confirm-delete-yes').addEventListener('click', async () => {
+        const id = state.editingEntryId;
+        if (id === null) {
+          closeConfirmDelete();
+          return;
+        }
+        closeConfirmDelete();
+        try {
+          await deleteEntry(id);
+        } catch (err) {
+          alert('삭제에 실패했어요: ' + err.message);
+          return;
+        }
+        closeEditMode();
+        resetInputDraft();
+        resetHome();
+        await enterJournal();
+        showView('journal');
       });
 
       // Photo inputs
