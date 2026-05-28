@@ -860,15 +860,18 @@
       align-items: center;
       gap: 10px;
     }
+    /* #038 ✎ 가시성 갱신 — width/height 28→32, padding 4→5(터치 36→42px), font-size 14→16,
+       color #B5A38B→#6B5340(짙은 갈색), hover #6B5340→#5C4631, hover bg 0.06→0.08.
+       신규 클래스명 0건·신규 컬러 코드 0건 (모두 본 파일 다른 영역 기존 색). */
     .entry-edit {
-      width: 28px;
-      height: 28px;
-      padding: 4px;
+      width: 32px;
+      height: 32px;
+      padding: 5px;
       margin-left: 10px;
       font-family: 'Noto Serif KR', Georgia, serif;
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1;
-      color: #B5A38B;
+      color: #6B5340;
       background: transparent;
       border: none;
       border-radius: 50%;
@@ -880,30 +883,16 @@
     }
     .entry-edit:hover,
     .entry-edit:active {
-      color: #6B5340;
-      background: rgba(92, 70, 49, 0.06);
+      color: #5C4631;
+      background: rgba(92, 70, 49, 0.08);
     }
     .entry-edit:focus-visible {
       outline: 1px dashed rgba(92, 70, 49, 0.3);
       outline-offset: 2px;
     }
 
-    /* ----- #036 수정 모드 푸터: 좌측 "지우기" 버튼 ----- */
-    .btn-delete-edit {
-      display: none; /* 기본 입력 모드에서는 숨김. .is-edit-mode 진입 시 노출 */
-      font-family: 'Noto Serif KR', Georgia, serif;
-      font-size: 13px;
-      color: #B5A38B;
-      background: transparent;
-      border: none;
-      padding: 8px 6px;
-      letter-spacing: 1.2px;
-      cursor: pointer;
-      transition: color 0.2s ease;
-    }
-    .btn-delete-edit:active,
-    .btn-delete-edit:hover { color: #6B5340; }
-    .input-footer.is-edit-mode .btn-delete-edit { display: inline-block; }
+    /* #038 .btn-delete-edit CSS 통째 제거 — "지우기"는 카드 외부(.entry-delete) 부활.
+       .input-footer.is-edit-mode 토글 클래스 자체 폐기 — JS open/closeEditMode 호출도 제거. */
 
     /* ----- #036 삭제 확인 다이얼로그 (settings-overlay/modal 토큰 100% 재사용) ----- */
     .confirm-delete-overlay {
@@ -2267,7 +2256,6 @@
       </div>
 
       <footer class="input-footer" id="input-footer">
-        <button class="btn-delete-edit" id="btn-delete-edit" type="button">지우기</button>
         <button class="btn-back" id="btn-back" type="button">‹ 이전</button>
         <button class="btn-save" id="btn-save" type="button">기록하기</button>
       </footer>
@@ -2510,7 +2498,10 @@
       // #036: 수정 모드 추적용. null이면 신규 entry, 값 있으면 해당 id 덮어쓰기.
       editingEntryId: null,
       // #036: 수정 모드 진입 시 원본 entry의 createdAt 보존용 (덮어쓰기 시 동일 값 재사용).
-      editingCreatedAt: null
+      editingCreatedAt: null,
+      // #039: 카드 "지우기" → 다이얼로그 진입 시 박제. 수정 모드와 별개 의미 단위로 분리.
+      //       다이얼로그 "네" 핸들러가 이 id로 deleteEntry 호출, "아니요"/overlay 클릭 시 null 리셋.
+      pendingDeleteId: null
     };
 
     const SENSE_LABELS = {
@@ -2901,19 +2892,15 @@
 
     function handlePhotoFile(file) {
       if (!file) return;
+      // #039: photo-preview blob URL 단일 추적자(_photoPreviewBlobUrl)로 통합 관리.
       state.photoBlob = file;
-      const img = document.getElementById('photo-preview');
-      if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-      img.src = URL.createObjectURL(file);
-      document.getElementById('photo-frame').classList.add('has-photo');
+      _setPhotoPreview(file);
     }
 
     function removePhoto() {
+      // #039: photo-preview blob URL 단일 추적자(_photoPreviewBlobUrl)로 통합 관리.
       state.photoBlob = null;
-      const img = document.getElementById('photo-preview');
-      if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-      img.removeAttribute('src');
-      document.getElementById('photo-frame').classList.remove('has-photo');
+      _setPhotoPreview(null);
       document.getElementById('photo-camera').value = '';
       document.getElementById('photo-album').value  = '';
     }
@@ -3015,8 +3002,15 @@
       p.textContent = e.text;
       card.appendChild(p);
 
-      // #036: entry 카드 안 "지우기" 버튼 제거 (.entry-delete CSS는 라인 840-855 자연 방치 — 디자인팀 cleanup 카드 후보).
-      // 삭제 경로는 수정 모드 푸터의 .btn-delete-edit + .confirm-delete-overlay로 이동.
+      // #039: 카드 외부 "지우기" 텍스트 버튼 부활 (라인 840-855 .entry-delete CSS 100% 재사용).
+      // 클릭 시 네이티브 confirm이 아닌 신규 .confirm-delete-overlay 다이얼로그 호출. id 박제.
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'entry-delete';
+      del.setAttribute('aria-label', '이 기록 지우기');
+      del.textContent = '지우기';
+      del.addEventListener('click', () => openConfirmDelete(e.id));
+      card.appendChild(del);
 
       return card;
     }
@@ -3049,7 +3043,10 @@
       });
     }
 
-    // #036: 수정 모드 진입 — entry 데이터를 입력 화면에 prefill + .is-edit-mode toggle + btn-save 텍스트 "기록하기" → "고치기".
+    // #036/#039: 수정 모드 진입 — entry 데이터를 입력 화면에 prefill + btn-save 텍스트 "기록하기" → "고치기".
+    // #039: .is-edit-mode 클래스 add 호출 제거 (.btn-delete-edit 폐기에 따라 토글 클래스 자체 불필요).
+    //       사진 prefill 회귀 fix — IndexedDB Blob 직접 src 박는 대신, 트랜잭션 안전 영역에서
+    //       먼저 photoBlob 캐시 박제 후 createObjectURL 호출. URL은 photoPreviewBlobUrl 추적자에 등록.
     async function openEditMode(id) {
       const entry = await getEntryById(id);
       if (!entry) return;
@@ -3061,47 +3058,65 @@
       // selectedSenses prefill
       state.selectedSenses = new Set(entry.senses || []);
 
-      // 사진 prefill (photoBlob → photo-preview src + photo-frame visible toggle)
+      // 사진 prefill — #039 회귀 fix: photoBlob 캐시를 state에 먼저 박제 후 createObjectURL 호출.
+      // 이전 photo-preview blob URL이 살아있으면 먼저 revoke (안전망).
       state.photoBlob = entry.photoBlob || null;
-      const photoImg = document.getElementById('photo-preview');
-      const photoFrame = document.getElementById('photo-frame');
-      if (photoImg.src && photoImg.src.startsWith('blob:')) URL.revokeObjectURL(photoImg.src);
-      if (entry.photoBlob) {
-        photoImg.src = URL.createObjectURL(entry.photoBlob);
-        photoFrame.classList.add('has-photo');
-      } else {
-        photoImg.removeAttribute('src');
-        photoFrame.classList.remove('has-photo');
-      }
+      _setPhotoPreview(state.photoBlob);
 
       // 텍스트 prefill
       state.text = entry.text || '';
       document.getElementById('text-input').value = state.text;
 
-      // 헤더 picked dots/names 갱신 + 푸터 모드 toggle
+      // 헤더 picked dots/names 갱신 + btn-save 텍스트 교체 (.is-edit-mode 클래스 토글 폐기됨)
       renderPicked();
       _forceClosePicker();
-      document.getElementById('input-footer').classList.add('is-edit-mode');
       document.getElementById('btn-save').textContent = '고치기';
       updateSaveButton();
 
       showView('input');
     }
 
-    // #036: 수정 모드 종료 — 상태/푸터/btn-save 텍스트를 신규 입력 모드 기본값으로 회귀.
+    // #036/#039: 수정 모드 종료 — 상태/btn-save 텍스트를 신규 입력 모드 기본값으로 회귀.
+    // #039: photo-preview 영역도 명시 정리 (resetInputDraft가 부르는 removePhoto 외 안전망 한 겹).
+    //       .is-edit-mode 클래스 remove 호출 폐기.
     function closeEditMode() {
       state.editingEntryId = null;
       state.editingCreatedAt = null;
-      document.getElementById('input-footer').classList.remove('is-edit-mode');
       document.getElementById('btn-save').textContent = '기록하기';
     }
 
-    // #036: 삭제 확인 다이얼로그 열기/닫기.
-    function openConfirmDelete() {
+    // #039: photo-preview 영역 단일 진입점 — IndexedDB Blob 또는 File blob을 받아 src 박제 + URL 추적.
+    //       이전 src의 blob URL이 살아있으면 안전 revoke. blob이 null이면 빈 상태로 회귀.
+    //       openEditMode·handlePhotoFile에서 공통 호출, photo lifecycle 회귀 방지.
+    let _photoPreviewBlobUrl = null;
+    function _setPhotoPreview(blob) {
+      const photoImg = document.getElementById('photo-preview');
+      const photoFrame = document.getElementById('photo-frame');
+      if (_photoPreviewBlobUrl) {
+        URL.revokeObjectURL(_photoPreviewBlobUrl);
+        _photoPreviewBlobUrl = null;
+      }
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        _photoPreviewBlobUrl = url;
+        photoImg.src = url;
+        photoFrame.classList.add('has-photo');
+      } else {
+        photoImg.removeAttribute('src');
+        photoFrame.classList.remove('has-photo');
+      }
+    }
+
+    // #039: 삭제 확인 다이얼로그 — id 인자로 받아 state.pendingDeleteId에 박제.
+    //       (수정 모드 거치지 않고 카드에서 직접 호출되는 흐름 지원.)
+    function openConfirmDelete(id) {
+      if (id == null) return;
+      state.pendingDeleteId = id;
       document.getElementById('confirm-delete-overlay').hidden = false;
     }
     function closeConfirmDelete() {
       document.getElementById('confirm-delete-overlay').hidden = true;
+      state.pendingDeleteId = null;
     }
 
     // ---------- Flow tab date state ----------
@@ -4022,13 +4037,20 @@
     }
 
     async function saveAndShowDone() {
-      // #036: 수정 모드 분기 — editingEntryId null이면 신규 entry, 값 있으면 동일 id 덮어쓰기 + createdAt 보존.
+      // #036/#039: 수정 모드 분기 — editingEntryId null이면 신규 entry, 값 있으면 동일 id 덮어쓰기 + createdAt 보존.
       if (state.editingEntryId !== null) {
+        // #039 사진 prefill 회귀 fix — 의심 원인: openEditMode에서 IndexedDB 트랜잭션 종료 후
+        // 그 Blob 참조를 state.photoBlob에 박았고, putEntryRaw 시 같은 객체를 .put.
+        // iOS Safari standalone PWA에서 트랜잭션 종료된 Blob 재사용 시 race condition 가능.
+        // 안전망 — Blob.slice()로 새 Blob 객체 만들어 박제 (type 보존). null이면 그대로 null.
+        const safePhotoBlob = state.photoBlob
+          ? state.photoBlob.slice(0, state.photoBlob.size, state.photoBlob.type || '')
+          : null;
         const updated = {
           id: state.editingEntryId,
           createdAt: state.editingCreatedAt || new Date().toISOString(),
           senses: [...state.selectedSenses],
-          photoBlob: state.photoBlob,
+          photoBlob: safePhotoBlob,
           text: state.text.trim()
         };
         try {
@@ -4037,13 +4059,14 @@
           alert('저장에 실패했어요: ' + err.message);
           return;
         }
-        // 수정 모드 종료 후 감각기록 탭으로 복귀 (Done 화면 거치지 않음 — 신규 기록과 시각 위계 분리).
+        // #039 회귀 fix — view 전환을 먼저 한 뒤 입력 화면 정리.
+        // 그래야 사용자가 input 화면 photo-preview가 비워지는 한순간을 보지 않음.
         // 일기 자동 재생성 X — 기존 diaries 그대로 두고 솔라가 일기장에서 "다시 쓰기" 직접 누를 때만 갱신 (#036 박제 5).
-        closeEditMode();
-        resetInputDraft();
+        await enterJournal();        // renderJournal — 카드 영역 새 URL로 미리 그림
+        showView('journal');          // view 전환 — 깨끗한 감각기록 탭이 즉시 노출
+        closeEditMode();              // editingEntryId/createdAt null, btn-save 텍스트 회귀
+        resetInputDraft();            // state.text·photoBlob 리셋 + photo-preview 빈 상태 (이미 view 밖이라 안 보임)
         resetHome();
-        await enterJournal();
-        showView('journal');
         return;
       }
 
@@ -4619,24 +4642,23 @@
         showView('home');
       });
 
-      // #036: 수정 모드 푸터 좌측 "지우기" → 삭제 확인 다이얼로그.
-      document.getElementById('btn-delete-edit').addEventListener('click', () => {
-        if (state.editingEntryId === null) return;
-        openConfirmDelete();
-      });
+      // #039: btn-delete-edit 리스너 폐기 — "지우기"는 카드 외부(.entry-delete) 부활,
+      //       click → openConfirmDelete(entry.id)로 직접 다이얼로그 호출 (수정 모드 안 거침).
+      //       buildEntryCard 안 동적 리스너 박제로 대체. 여기서는 정의하지 않음.
 
-      // #036: 다이얼로그 "아니요" + overlay 바깥 클릭 → 닫기만 (삭제 취소).
+      // #036/#039: 다이얼로그 "아니요" + overlay 바깥 클릭 → 닫기만 (삭제 취소, pendingDeleteId 리셋).
       document.getElementById('confirm-delete-cancel').addEventListener('click', closeConfirmDelete);
       document.getElementById('confirm-delete-overlay').addEventListener('click', (e) => {
         // modal 안쪽 클릭은 닫지 않음. overlay 본체(바깥) 클릭만 닫음.
         if (e.target.id === 'confirm-delete-overlay') closeConfirmDelete();
       });
 
-      // #036: 다이얼로그 "네" → deleteEntry(editingEntryId) + 입력 화면 닫고 감각기록 탭 복귀.
-      // 삭제 후 별도 안내 메시지 0건 — 사라진 entry 자체가 메시지 (솔라 톤 "단순함 우선" #035 박제).
+      // #039: 다이얼로그 "네" → deleteEntry(pendingDeleteId) + 현재 화면(감각기록 탭) 그대로 재렌더.
+      //       카드에서 직접 호출됐기 때문에 수정 모드 진입 없음 — closeEditMode·resetInputDraft·resetHome 호출 불필요.
+      //       삭제 후 별도 안내 메시지 0건 — 사라진 entry 자체가 메시지 (솔라 톤 "단순함 우선" #035 박제).
       document.getElementById('confirm-delete-yes').addEventListener('click', async () => {
-        const id = state.editingEntryId;
-        if (id === null) {
+        const id = state.pendingDeleteId;
+        if (id == null) {
           closeConfirmDelete();
           return;
         }
@@ -4647,11 +4669,7 @@
           alert('삭제에 실패했어요: ' + err.message);
           return;
         }
-        closeEditMode();
-        resetInputDraft();
-        resetHome();
-        await enterJournal();
-        showView('journal');
+        // deleteEntry 내부에서 활성 탭(감각기록 또는 캘린더) 자동 재렌더 — 추가 호출 0건.
       });
 
       // Photo inputs
